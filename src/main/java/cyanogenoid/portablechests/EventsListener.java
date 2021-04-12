@@ -10,7 +10,7 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-public class EventListener implements Listener {
+public class EventsListener implements Listener {
 
     @EventHandler
     public void onBlockBreaks(BlockBreakEvent e) {
