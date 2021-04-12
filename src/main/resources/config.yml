@@ -1,0 +1,19 @@
+#Containers to make portable
+portable-barrels: true
+portable-blast-furnaces: true
+portable-brewing-stands: true
+portable-chests: true
+portable-dispensers: true
+portable-droppers: true
+portable-furnaces: true
+portable-hoppers: true
+portable-smokers: true
+
+#Can containers stack when they have exactly the same content?
+allow-stacking: true
+
+#1 for container inside a container, 2 for container inside a container inside a container, so on...
+max-nesting: 1
+
+#Message sent to the player when the nesting limit is reached
+nesting-limit-message: "§cNesting limit reached!"
