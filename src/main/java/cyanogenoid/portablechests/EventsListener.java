@@ -18,6 +18,8 @@ public class EventsListener implements Listener {
         BlockState blockState = block.getState();
         if (!(PortableChests.isContainer(blockState))) return;
 
+        if (!e.getPlayer().hasPermission(Permissions.canCreatePortableChest)) return;
+
         Inventory blockInventory;
         if (blockState instanceof Chest) blockInventory = ((Chest) blockState).getBlockInventory();
         else blockInventory = ((Container) blockState).getInventory();
