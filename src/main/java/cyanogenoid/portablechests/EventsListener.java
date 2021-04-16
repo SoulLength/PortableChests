@@ -32,7 +32,7 @@ public class EventsListener implements Listener {
         if (blockItemStack == null) return;
 
         e.setDropItems(false);
-        block.getWorld().dropItemNaturally(block.getLocation(), PortableChests.makePortableContainer(blockInventory, blockItemStack));
+        block.getWorld().dropItem(block.getLocation(), PortableChests.makePortableContainer(blockInventory, blockItemStack));
     }
 
     @EventHandler
