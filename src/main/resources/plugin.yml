@@ -1,7 +1,7 @@
 name: PortableChests
 version: ${project.version}
 main: cyanogenoid.portablechests.PortableChests
-api-version: 1.16
+api-version: 1.14
 authors: [ Cyanogenoid ]
 description: Portable chests, barrels, hoppers..
 
