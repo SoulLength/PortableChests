@@ -1,7 +1,6 @@
 package cyanogenoid.portablechests;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -64,8 +63,8 @@ public final class PortableChests extends JavaPlugin {
         if (!ALLOW_STACKING) meta.getPersistentDataContainer().set(UNIQUE_KEY, PersistentDataType.STRING, UUID.randomUUID().toString());
         meta.getPersistentDataContainer().set(CONTENT_KEY, PersistentDataType.STRING, encodeInventory(inventory));
         meta.getPersistentDataContainer().set(NESTING_KEY, PersistentDataType.INTEGER, getTotalContainerNesting(inventory) + 1);
+        meta.setLore(Collections.singletonList(ChatColor.YELLOW.toString()+Arrays.stream(inventory.getContents()).filter(Objects::nonNull).count() + " stacks inside"));
         inventoryItemStack.setItemMeta(meta);
-        inventoryItemStack.lore(Collections.singletonList(Component.text(Arrays.stream(inventory.getContents()).filter(Objects::nonNull).count() + " stacks inside").color(NamedTextColor.YELLOW)));
         return inventoryItemStack;
     }
 

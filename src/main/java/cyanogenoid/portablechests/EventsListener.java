@@ -10,6 +10,9 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 public class EventsListener implements Listener {
 
     @EventHandler
@@ -23,7 +26,7 @@ public class EventsListener implements Listener {
         Inventory blockInventory;
         if (blockState instanceof Chest) blockInventory = ((Chest) blockState).getBlockInventory();
         else blockInventory = ((Container) blockState).getInventory();
-        if (!e.isDropItems() || blockInventory.isEmpty()) return;
+        if (!e.isDropItems() || Arrays.stream(blockInventory.getContents()).allMatch(Objects::isNull)) return;
 
         ItemStack blockItemStack = block.getDrops(e.getPlayer().getInventory().getItemInMainHand()).stream()
                                         .filter(itemStack -> itemStack != null && itemStack.getType().equals(block.getType()))
@@ -33,6 +36,7 @@ public class EventsListener implements Listener {
 
         e.setDropItems(false);
         block.getWorld().dropItemNaturally(block.getLocation(), PortableChests.makePortableContainer(blockInventory, blockItemStack));
+        blockInventory.clear();
     }
 
     @EventHandler
