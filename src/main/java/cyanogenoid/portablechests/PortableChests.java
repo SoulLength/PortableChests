@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.Comparator;
 import java.util.stream.IntStream;
 
+
 public final class PortableChests extends JavaPlugin {
     private static NamespacedKey UNIQUE_KEY;
     private static NamespacedKey CONTENT_KEY;
@@ -49,7 +50,7 @@ public final class PortableChests extends JavaPlugin {
         containersConfigMap.put("Smoker", this.getConfig().getBoolean("portable-smokers"));
 
         containersConfigMap.put("DoubleChest", this.getConfig().getBoolean("portable-chests"));
-        containersConfigMap.put("ShulkerBox", false);
+        containersConfigMap.put("ShulkerBox", true);
 
         getServer().getPluginManager().registerEvents(new EventsListener(), this);
     }
@@ -57,15 +58,20 @@ public final class PortableChests extends JavaPlugin {
     @Override
     public void onDisable() { }
 
-    public static ItemStack makePortableContainer(Inventory inventory, ItemStack originalItemStack) {
-        ItemStack inventoryItemStack = new ItemStack(originalItemStack);
-        ItemMeta meta = inventoryItemStack.getItemMeta();
+    public static ItemStack makePortableContainer(Inventory inventory, ItemStack itemStack) {
+        ItemMeta meta = itemStack.getItemMeta();
         if (!ALLOW_STACKING) meta.getPersistentDataContainer().set(UNIQUE_KEY, PersistentDataType.STRING, UUID.randomUUID().toString());
         meta.getPersistentDataContainer().set(CONTENT_KEY, PersistentDataType.STRING, encodeInventory(inventory));
-        meta.getPersistentDataContainer().set(NESTING_KEY, PersistentDataType.INTEGER, getTotalContainerNesting(inventory) + 1);
         meta.setLore(Collections.singletonList(ChatColor.YELLOW.toString()+Arrays.stream(inventory.getContents()).filter(Objects::nonNull).count() + " stacks inside"));
-        inventoryItemStack.setItemMeta(meta);
-        return inventoryItemStack;
+        setItemMetaNestingData(meta, inventory);
+        itemStack.setItemMeta(meta);
+        return itemStack;
+    }
+
+    public static void setShulkerBoxNestingData(Inventory inventory, ItemStack itemStack) {
+        ItemMeta meta = itemStack.getItemMeta();
+        setItemMetaNestingData(meta, inventory);
+        itemStack.setItemMeta(meta);
     }
 
     public static void fillPortableContainer(Inventory blockInventory, ItemStack blockItemStack) throws InvalidConfigurationException {
@@ -82,7 +88,7 @@ public final class PortableChests extends JavaPlugin {
     }
 
     public static Boolean isPortableContainer(ItemStack item) {
-        return getItemStackContentData(item) != null;
+        return getItemStackNestingData(item) != -1;
     }
 
     public static Boolean canNestItemStack(ItemStack itemStack) { return getItemStackNestingData(itemStack) < MAX_NESTING; }
@@ -116,6 +122,10 @@ public final class PortableChests extends JavaPlugin {
     private static Integer getItemStackNestingData(ItemStack item) {
         if (item == null || item.getItemMeta() == null || !item.getItemMeta().getPersistentDataContainer().has(NESTING_KEY, PersistentDataType.INTEGER)) return -1;
         return item.getItemMeta().getPersistentDataContainer().get(NESTING_KEY, PersistentDataType.INTEGER);
+    }
+
+    private static void setItemMetaNestingData(ItemMeta itemMeta, Inventory inventory) {
+        itemMeta.getPersistentDataContainer().set(NESTING_KEY, PersistentDataType.INTEGER, getTotalContainerNesting(inventory) + 1);
     }
 
     private static Integer getTotalContainerNesting(Inventory inventory) {

@@ -13,20 +13,23 @@ import org.bukkit.inventory.ItemStack;
 import java.util.Arrays;
 import java.util.Objects;
 
+
 public class EventsListener implements Listener {
 
     @EventHandler
     public void onBlockBreaks(BlockBreakEvent e) {
+        if (!e.isDropItems()) return;
+
         Block block = e.getBlock();
         BlockState blockState = block.getState();
         if (!(PortableChests.isContainer(blockState))) return;
 
-        if (!e.getPlayer().hasPermission(Permissions.canCreatePortableChest)) return;
-
         Inventory blockInventory;
         if (blockState instanceof Chest) blockInventory = ((Chest) blockState).getBlockInventory();
         else blockInventory = ((Container) blockState).getInventory();
-        if (!e.isDropItems() || Arrays.stream(blockInventory.getContents()).allMatch(Objects::isNull)) return;
+        if (Arrays.stream(blockInventory.getContents()).allMatch(Objects::isNull)) return;
+
+
 
         ItemStack blockItemStack = block.getDrops(e.getPlayer().getInventory().getItemInMainHand()).stream()
                                         .filter(itemStack -> itemStack != null && itemStack.getType().equals(block.getType()))
@@ -34,16 +37,23 @@ public class EventsListener implements Listener {
                                         .orElse(null);
         if (blockItemStack == null) return;
 
-        e.setDropItems(false);
-        block.getWorld().dropItemNaturally(block.getLocation(), PortableChests.makePortableContainer(blockInventory, blockItemStack));
-        blockInventory.clear();
+        if (blockState instanceof ShulkerBox) {
+            e.setDropItems(false);
+            PortableChests.setShulkerBoxNestingData(blockInventory, blockItemStack);
+            block.getWorld().dropItemNaturally(block.getLocation(), blockItemStack);
+        }
+        else if (e.getPlayer().hasPermission(Permissions.canCreatePortableChest)) {
+            e.setDropItems(false);
+            block.getWorld().dropItemNaturally(block.getLocation(), PortableChests.makePortableContainer(blockInventory, blockItemStack));
+            blockInventory.clear();
+        }
     }
 
     @EventHandler
     public void onBlockPlaced(BlockPlaceEvent e) {
         Block block = e.getBlock();
         BlockState blockState = block.getState();
-        if (!(PortableChests.isContainer(blockState))) return;
+        if (!(PortableChests.isContainer(blockState)) || blockState instanceof ShulkerBox) return;
         if (!PortableChests.isPortableContainer(e.getItemInHand())) return;
 
         Inventory blockInventory = ((Container) blockState).getInventory();
@@ -59,21 +69,19 @@ public class EventsListener implements Listener {
     @EventHandler
     public void onInventoryPickupItem(InventoryPickupItemEvent e) {
         if (!(PortableChests.isContainer(e.getInventory()) || !PortableChests.isPortableContainer(e.getItem().getItemStack()))) return;
-        if (!PortableChests.canNestItemStack(e.getItem().getItemStack())) {
-            e.setCancelled(true);
-        }
+        if (!PortableChests.canNestItemStack(e.getItem().getItemStack())) e.setCancelled(true);
     }
 
     @EventHandler
     public void onInventoryMoveItem(InventoryMoveItemEvent e) {
+        if (e.getDestination().getType().equals(InventoryType.SHULKER_BOX)) return;
         if (!(PortableChests.isContainer(e.getDestination()) || !PortableChests.isPortableContainer(e.getItem()))) return;
-        if (!PortableChests.canNestItemStack(e.getItem())) {
-            e.setCancelled(true);
-        }
+        if (!PortableChests.canNestItemStack(e.getItem())) e.setCancelled(true);
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent e) {
+        if (e.getInventory().getType().equals(InventoryType.SHULKER_BOX)) return;
         if (!PortableChests.isContainer(e.getInventory())) return;
         ItemStack itemStack = this.findMovingItemStack(e);
         if (!PortableChests.isPortableContainer(itemStack)) return;
@@ -82,6 +90,7 @@ public class EventsListener implements Listener {
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent e) {
+        if (e.getInventory().getType().equals(InventoryType.SHULKER_BOX)) return;
         if (!PortableChests.isContainer(e.getInventory())) return;
         if (!PortableChests.isPortableContainer(e.getOldCursor())) return;
         if (e.getRawSlots().stream().anyMatch(slotID -> slotID <= e.getInventory().getSize() && !PortableChests.canNestItemStack(e.getOldCursor(), e.getWhoClicked()))) e.setCancelled(true);
