@@ -52,7 +52,8 @@ public final class PortableChests extends JavaPlugin {
         containersConfigMap.put("DoubleChest", this.getConfig().getBoolean("portable-chests"));
         containersConfigMap.put("ShulkerBox", true);
 
-        getServer().getPluginManager().registerEvents(new EventsListener(), this);
+        getServer().getPluginManager().registerEvents(new BlockListener(), this);
+        getServer().getPluginManager().registerEvents(new InventoryListener(), this);
     }
 
     @Override
