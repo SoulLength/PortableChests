@@ -16,4 +16,21 @@ allow-stacking: true
 max-nesting: 1
 
 #Message sent to the player when the nesting limit is reached
-nesting-limit-message: "§cNesting limit reached!"
+nesting-limit-message: §cNesting limit reached!
+
+#Penalties (PotionEffectType) to apply when a player holds a portable container in their inventory
+penalties:
+  #Example:
+  #- SLOW
+  #- SLOW_DIGGING
+penalties-amplifiers:
+  #Example:
+  #- 1
+  #- 0
+
+#The higher the number, the longer the penalties will last
+penalty-duration: 50 #ticks
+
+#The lower the number, the faster the penalties will be updated
+# !! MAY INDUCE LAGS IF TOO LOW !!
+penalty-update: 25 #ticks

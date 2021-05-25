@@ -9,4 +9,7 @@ permissions:
   cyanogenoid.portablechests.create:
     description: Grants the permission to make containers portable when broken
     default: true
+  cyanogenoid.portablechests.penalty.skip:
+    description: Grants the permission to skip penalties for holding a portable container
+    default: false
 
