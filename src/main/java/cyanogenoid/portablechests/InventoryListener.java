@@ -7,20 +7,20 @@ import org.bukkit.inventory.ItemStack;
 
 public class InventoryListener implements Listener {
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void on(InventoryPickupItemEvent e) {
         if (!(PortableChests.isContainer(e.getInventory()) || !PortableChests.isPortableContainer(e.getItem().getItemStack()))) return;
         if (!PortableChests.canNestItemStack(e.getItem().getItemStack())) e.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void on(InventoryMoveItemEvent e) {
         if (e.getDestination().getType().equals(InventoryType.SHULKER_BOX)) return;
         if (!(PortableChests.isContainer(e.getDestination()) || !PortableChests.isPortableContainer(e.getItem()))) return;
         if (!PortableChests.canNestItemStack(e.getItem())) e.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void on(InventoryClickEvent e) {
         if (e.getInventory().getType().equals(InventoryType.SHULKER_BOX)) return;
         if (!PortableChests.isContainer(e.getInventory())) return;
@@ -29,7 +29,7 @@ public class InventoryListener implements Listener {
         if (this.isPlayerMovingItemStackToContainer(e) && !PortableChests.canNestItemStack(itemStack, e.getWhoClicked())) e.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void on(InventoryDragEvent e) {
         if (e.getInventory().getType().equals(InventoryType.SHULKER_BOX)) return;
         if (!PortableChests.isContainer(e.getInventory())) return;

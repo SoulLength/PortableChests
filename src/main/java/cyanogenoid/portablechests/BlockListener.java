@@ -3,6 +3,7 @@ package cyanogenoid.portablechests;
 import org.bukkit.block.*;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -15,7 +16,7 @@ import java.util.Objects;
 
 public class BlockListener implements Listener {
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void on(BlockBreakEvent e) {
         if (!e.isDropItems()) return;
 
@@ -48,7 +49,7 @@ public class BlockListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void on(BlockPlaceEvent e) {
         Block block = e.getBlock();
         BlockState blockState = block.getState();
