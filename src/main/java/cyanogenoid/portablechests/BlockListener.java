@@ -1,5 +1,6 @@
 package cyanogenoid.portablechests;
 
+import org.bukkit.Material;
 import org.bukkit.block.*;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.event.EventHandler;
@@ -38,18 +39,18 @@ public class BlockListener implements Listener {
         if (blockItemStack == null) return;
 
         if (blockState instanceof ShulkerBox) {
-            e.setDropItems(false);
+            e.setCancelled(true);
+            e.getBlock().setType(Material.AIR);
             PortableChests.setShulkerBoxNestingData(blockInventory, blockItemStack);
             block.getWorld().dropItemNaturally(block.getLocation(), blockItemStack);
-        }
-        else if (e.getPlayer().hasPermission(Permissions.canCreatePortableChest)) {
+        } else if (e.getPlayer().hasPermission(Permissions.canCreatePortableChest)) {
             e.setDropItems(false);
             block.getWorld().dropItemNaturally(block.getLocation(), PortableChests.makePortableContainer(blockInventory, blockItemStack));
             blockInventory.clear();
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void on(BlockPlaceEvent e) {
         Block block = e.getBlock();
         BlockState blockState = block.getState();
