@@ -1,6 +1,9 @@
-package cyanogenoid.portablechests;
+package cyanogenoid.portablechests.listeners;
 
+import cyanogenoid.portablechests.Permissions;
+import cyanogenoid.portablechests.PortableChests;
 import org.bukkit.Material;
+import org.bukkit.Nameable;
 import org.bukkit.block.*;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.event.EventHandler;
@@ -13,7 +16,6 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.Arrays;
 import java.util.Objects;
-
 
 public class BlockListener implements Listener {
 
@@ -56,11 +58,16 @@ public class BlockListener implements Listener {
         BlockState blockState = block.getState();
         if (!(PortableChests.isContainer(blockState)) || blockState instanceof ShulkerBox) return;
         if (!PortableChests.isPortableContainer(e.getItemInHand())) return;
-
         Inventory blockInventory = ((Container) blockState).getInventory();
+
+
+        Nameable nameableBlock = (Nameable) blockState;
+        nameableBlock.setCustomName(null);
+        blockState.update();
 
         try {
             PortableChests.fillPortableContainer(blockInventory, e.getItemInHand());
+
         } catch (InvalidConfigurationException invalidConfigurationException) {
             e.getPlayer().sendMessage("Invalid chest content!");
             e.setCancelled(true);

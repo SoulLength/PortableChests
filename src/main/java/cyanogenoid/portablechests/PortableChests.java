@@ -1,5 +1,6 @@
 package cyanogenoid.portablechests;
 
+import org.apache.commons.lang.WordUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -7,7 +8,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -56,17 +56,17 @@ public final class PortableChests extends JavaPlugin {
         containersConfigMap.put("DoubleChest", this.getConfig().getBoolean("portable-chests"));
         containersConfigMap.put("ShulkerBox", true);
 
-        getServer().getPluginManager().registerEvents(new BlockListener(), this);
-        getServer().getPluginManager().registerEvents(new InventoryListener(), this);
+        getServer().getPluginManager().registerEvents(new cyanogenoid.portablechests.listeners.BlockListener(), this);
+        getServer().getPluginManager().registerEvents(new cyanogenoid.portablechests.listeners.InventoryListener(), this);
 
         String[] penalties = this.getConfig().getStringList("penalties").toArray(new String[0]);
         Integer[] amplifiers = this.getConfig().getIntegerList("penalties-amplifiers").toArray(new Integer[0]);
-        if (penalties.length == 0) return;
 
+        if (penalties.length == 0) return;
         new PenaltyMonitor(IntStream.range(0, penalties.length)
-                .mapToObj(index -> new PotionEffect(Objects.requireNonNull(PotionEffectType.getByName(penalties[index])), this.getConfig().getInt("penalty-duration"), index < amplifiers.length ? amplifiers[index] : 0))
-                .collect(Collectors.toList()))
-                .runTaskTimer(this, 0, this.getConfig().getInt("penalty-update"));
+                                    .mapToObj(index -> new PotionEffect(Objects.requireNonNull(PotionEffectType.getByName(penalties[index])), this.getConfig().getInt("penalty-duration"), index < amplifiers.length ? amplifiers[index] : 0))
+                                    .collect(Collectors.toList()))
+                                    .runTaskTimer(this, 0, this.getConfig().getInt("penalty-update"));
     }
 
     @Override
@@ -74,16 +74,37 @@ public final class PortableChests extends JavaPlugin {
 
     public static ItemStack makePortableContainer(Inventory inventory, ItemStack itemStack) {
         ItemMeta meta = itemStack.getItemMeta();
+        if (meta == null) return itemStack;
+
+        long count = Arrays.stream(inventory.getContents()).filter(Objects::nonNull).count();
+        List<String> lore = Arrays.stream(inventory.getContents())
+                                  .filter(Objects::nonNull)
+                                  .map(item -> ChatColor.GRAY + getItemStackDisplayName(item, false) + " x" + item.getAmount())
+                                  .limit(4)
+                                  .collect(Collectors.toList());
+        if (count > lore.size()) lore.add(ChatColor.GRAY + ChatColor.ITALIC.toString() + "and " + (count - lore.size()) + " more...");
+        meta.setLore(lore);
+
         if (!ALLOW_STACKING) meta.getPersistentDataContainer().set(UNIQUE_KEY, PersistentDataType.STRING, UUID.randomUUID().toString());
         meta.getPersistentDataContainer().set(CONTENT_KEY, PersistentDataType.STRING, encodeInventory(inventory));
-        meta.setLore(Collections.singletonList(ChatColor.YELLOW.toString()+Arrays.stream(inventory.getContents()).filter(Objects::nonNull).count() + " stacks inside"));
+        meta.setDisplayName(getItemStackDisplayName(itemStack, true) + ChatColor.ITALIC + "" + ChatColor.GOLD + " (" + count + (count == 1 ? " Stack)" : " Stacks)"));
+
         setItemMetaNestingData(meta, inventory);
         itemStack.setItemMeta(meta);
         return itemStack;
     }
 
+    public static String getItemStackDisplayName(ItemStack itemStack, boolean filterMark) {
+        ItemMeta meta = itemStack.getItemMeta();
+        if (meta != null && !meta.getDisplayName().equals(""))
+            return ChatColor.stripColor(filterMark ? meta.getDisplayName().replaceAll(" \\(\\d{1,2} (Stack|Stacks)\\)", "")
+                                                   : meta.getDisplayName());
+        return WordUtils.capitalizeFully(itemStack.getType().name().replace("_", " "));
+    }
+
     public static void setShulkerBoxNestingData(Inventory inventory, ItemStack itemStack) {
         ItemMeta meta = itemStack.getItemMeta();
+        if (meta == null) return;
         setItemMetaNestingData(meta, inventory);
         itemStack.setItemMeta(meta);
     }

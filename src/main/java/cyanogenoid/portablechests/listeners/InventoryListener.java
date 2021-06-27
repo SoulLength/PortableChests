@@ -1,5 +1,6 @@
-package cyanogenoid.portablechests;
+package cyanogenoid.portablechests.listeners;
 
+import cyanogenoid.portablechests.PortableChests;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.*;
