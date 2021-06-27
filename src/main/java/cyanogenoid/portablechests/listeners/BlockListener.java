@@ -52,7 +52,7 @@ public class BlockListener implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void on(BlockPlaceEvent e) {
         Block block = e.getBlock();
         BlockState blockState = block.getState();
