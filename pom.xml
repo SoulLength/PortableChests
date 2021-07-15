@@ -6,7 +6,7 @@
 
     <groupId>Cyanogenoid</groupId>
     <artifactId>PortableChests</artifactId>
-    <version>1.4.0</version>
+    <version>1.4.4</version>
     <packaging>jar</packaging>
     <name>PortableChests</name>
 
@@ -67,9 +67,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.papermc.paper</groupId>
+            <groupId>com.destroystokyo.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.17-R0.1-SNAPSHOT</version>
+            <version>1.14-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
