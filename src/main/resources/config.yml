@@ -1,3 +1,5 @@
+config-version: 1
+
 #Containers to make portable
 portable-barrels: true
 portable-blast-furnaces: true
@@ -19,14 +21,12 @@ max-nesting: 1
 nesting-limit-message: §cNesting limit reached!
 
 #Penalties (PotionEffectType) to apply when a player holds a portable container in their inventory
+#Check https://papermc.io/javadocs/paper/1.14/org/bukkit/potion/PotionEffectType.html
+#Format: <EFFECT>: <LEVEL>
 penalties:
-  #Example:
-  #- SLOW
-  #- SLOW_DIGGING
-penalties-amplifiers:
-  #Example:
-  #- 1
-  #- 0
+  #-- Examples --
+  #SLOW: 1
+  #SLOW_DIGGING: 0
 
 #The higher the number, the longer the penalties will last
 penalty-duration: 50 #ticks
@@ -34,3 +34,10 @@ penalty-duration: 50 #ticks
 #The lower the number, the faster the penalties will be updated
 # !! MAY INDUCE LAGS IF TOO LOW !!
 penalty-update: 25 #ticks
+
+#The enchantment required on the handling tool to create a portable container (one only enchantment supported)
+#Check https://papermc.io/javadocs/paper/1.14/org/bukkit/enchantments/Enchantment.html
+#Format: <ENCHANTMENT>: <LEVEL>
+enchantment-required:
+  #-- Example --
+  #SILK_TOUCH: 1
