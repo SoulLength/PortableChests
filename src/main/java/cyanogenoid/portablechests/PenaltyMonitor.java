@@ -20,7 +20,7 @@ public class PenaltyMonitor extends BukkitRunnable {
     @Override
     public void run() {
         getOnlinePlayers().stream()
-                .filter(player -> !player.hasPermission(Permissions.skipPenalty))
+                .filter(player -> !player.hasPermission(Permissions.canSkipPenalty))
                 .map(HumanEntity::getInventory)
                 .filter(PortableChests::containsPortableContainer)
                 .map(PlayerInventory::getHolder)
