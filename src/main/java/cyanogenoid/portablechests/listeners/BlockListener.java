@@ -33,12 +33,13 @@ public class BlockListener implements Listener {
         if (Arrays.stream(blockInventory.getContents()).allMatch(Objects::isNull)) return;
 
 
-
-        ItemStack blockItemStack = block.getDrops(e.getPlayer().getInventory().getItemInMainHand()).stream()
+        ItemStack handledItem = e.getPlayer().getInventory().getItemInMainHand();
+        ItemStack blockItemStack = block.getDrops(handledItem).stream()
                                         .filter(itemStack -> itemStack != null && itemStack.getType().equals(block.getType()))
                                         .findFirst()
                                         .orElse(null);
         if (blockItemStack == null) return;
+        if (!e.getPlayer().hasPermission(Permissions.canSkipEnchantment) && !PortableChests.hasRequiredEnchantment(handledItem)) return;
 
         if (blockState instanceof ShulkerBox) {
             e.setCancelled(true);
