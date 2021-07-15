@@ -12,4 +12,7 @@ permissions:
   cyanogenoid.portablechests.penalty.skip:
     description: Grants the permission to skip penalties for holding a portable container
     default: false
+  cyanogenoid.portablechests.enchantment.skip:
+    description: Grants the permission to skip enchantment requirements for creating a portable container
+    default: false
 
