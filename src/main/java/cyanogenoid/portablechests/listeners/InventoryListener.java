@@ -26,7 +26,7 @@ public class InventoryListener implements Listener {
         if (e.getInventory().getType().equals(InventoryType.SHULKER_BOX)) return;
         if (!PortableChests.isContainer(e.getInventory())) return;
         ItemStack itemStack = this.findMovingItemStack(e);
-        if (!PortableChests.isPortableContainer(itemStack)) return;
+        if (itemStack == null || !PortableChests.isPortableContainer(itemStack)) return;
         if (this.isPlayerMovingItemStackToContainer(e) && !PortableChests.canNestItemStack(itemStack, e.getWhoClicked())) e.setCancelled(true);
     }
 
@@ -47,7 +47,7 @@ public class InventoryListener implements Listener {
 
     private ItemStack findMovingItemStack(InventoryClickEvent e) {
         if (e.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY)) return e.getCurrentItem();
-        if (e.getAction().equals(InventoryAction.HOTBAR_MOVE_AND_READD) || e.getAction().equals(InventoryAction.HOTBAR_SWAP)) return e.getWhoClicked().getInventory().getItem(e.getHotbarButton());
+        if (e.getAction().equals(InventoryAction.HOTBAR_MOVE_AND_READD) || e.getAction().equals(InventoryAction.HOTBAR_SWAP)) return e.getHotbarButton() > 0 ? e.getWhoClicked().getInventory().getItem(e.getHotbarButton()) : null;
         if (e.getAction().equals(InventoryAction.PLACE_ALL) || e.getAction().equals(InventoryAction.PLACE_ONE) || e.getAction().equals(InventoryAction.SWAP_WITH_CURSOR)) return e.getCursor();
         return null;
     }
