@@ -41,3 +41,21 @@ penalty-update: 25 #ticks
 enchantment-required:
   #-- Example --
   #SILK_TOUCH: 1
+
+#Should the plugin ignore items with custom names?
+ignore-custom-named: false
+
+#The worlds where portable containers can be created in
+create-in-worlds:
+  - world
+  - nether
+  - end
+
+#The worlds where portable containers can be placed in
+place-in-worlds:
+  - world
+  - nether
+  - end
+
+#Message sent to the player when they cannot place a container in that world
+cannot-place-message: §cYou cannot place a portable container in this world!
