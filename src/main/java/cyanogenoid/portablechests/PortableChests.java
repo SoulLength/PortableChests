@@ -46,8 +46,8 @@ public final class PortableChests extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
 
-        String configVersion = getConfig().getString("config-version");
-        if (configVersion == null)  {
+        int configVersion = getConfig().getInt("config-version");
+        if (configVersion < 1)  {
             getLogger().log(Level.SEVERE, "Config file outdated! Some settings might not be loaded correctly.");
             getLogger().log(Level.SEVERE, "Remove the configuration file and restart the server to load the new version.");
         }
