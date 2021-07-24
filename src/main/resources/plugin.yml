@@ -9,6 +9,12 @@ permissions:
   cyanogenoid.portablechests.create:
     description: Grants the permission to make containers portable when broken
     default: true
+  cyanogenoid.portablechests.create.anywhere:
+    description: Grants the permission to create portable containers in any world
+    default: false
+  cyanogenoid.portablechests.place.anywhere:
+    description: Grants the permission to place portable containers in any world
+    default: false
   cyanogenoid.portablechests.penalty.skip:
     description: Grants the permission to skip penalties for holding a portable container
     default: false
