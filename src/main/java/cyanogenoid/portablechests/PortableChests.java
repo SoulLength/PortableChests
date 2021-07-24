@@ -1,14 +1,12 @@
 package cyanogenoid.portablechests;
 
 import org.apache.commons.lang.WordUtils;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.*;
+import org.bukkit.block.BlockState;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -29,13 +27,18 @@ public final class PortableChests extends JavaPlugin {
     private static NamespacedKey CONTENT_KEY;
     private static NamespacedKey NESTING_KEY;
 
+    private static final Map<String, Boolean> containersConfigMap = new HashMap<>();
+
     private static boolean ALLOW_STACKING;
     private static int MAX_NESTING;
-    private static String NESTING_LIMIT_MESSAGE;
     private static String REQUIRED_ENCHANTMENT;
     private static Integer REQUIRED_ENCHANTMENT_LEVEL;
+    private static Boolean IGNORE_CUSTOM_NAMED;
+    private static List<String> CREATE_IN_WORLDS;
+    private static List<String> PLACE_IN_WORLDS;
 
-    private static final Map<String, Boolean> containersConfigMap = new HashMap<>();
+    public static String NESTING_LIMIT_MESSAGE;
+    public static String CANNOT_PLACE_MESSAGE;
 
     public static PortableChests instance;
 
@@ -52,6 +55,12 @@ public final class PortableChests extends JavaPlugin {
         ALLOW_STACKING = getConfig().getBoolean("allow-stacking");
         MAX_NESTING = getConfig().getInt("max-nesting");
         NESTING_LIMIT_MESSAGE  = getConfig().getString("nesting-limit-message");
+
+        IGNORE_CUSTOM_NAMED = getConfig().getBoolean("ignore-custom-named");
+
+        CREATE_IN_WORLDS = getConfig().getStringList("create-in-worlds");
+        PLACE_IN_WORLDS = getConfig().getStringList("place-in-worlds");
+        CANNOT_PLACE_MESSAGE = getConfig().getString("cannot-place-message");
 
         UNIQUE_KEY = new NamespacedKey(this, "UNIQUE");
         CONTENT_KEY = new NamespacedKey(this, "CONTENT");
@@ -132,6 +141,20 @@ public final class PortableChests extends JavaPlugin {
         return WordUtils.capitalizeFully(itemStack.getType().name().replace("_", " "));
     }
 
+    public static void removeBlockDisplayNameMark(BlockState blockState) {
+        Nameable nameableBlock = (Nameable) blockState;
+        if (nameableBlock.getCustomName() == null) return;
+
+        String resultName = ChatColor.stripColor(nameableBlock.getCustomName().replaceAll(" \\(\\d{1,2} (Stack|Stacks)\\)", ""));
+        nameableBlock.setCustomName(WordUtils.capitalizeFully(blockState.getType().name().replace("_", " ")).equals(resultName) ? null : resultName);
+
+        blockState.update();
+    }
+
+    public static Boolean shouldIgnoreCustomNamed(BlockState blockState) {
+        return IGNORE_CUSTOM_NAMED && blockState instanceof Nameable && ((Nameable) blockState).getCustomName() != null;
+    }
+
     public static void setShulkerBoxNestingData(Inventory inventory, ItemStack itemStack) {
         ItemMeta meta = itemStack.getItemMeta();
         if (meta == null) return;
@@ -162,11 +185,8 @@ public final class PortableChests extends JavaPlugin {
                      .anyMatch(PortableChests::isPortableContainer);
     }
 
-    public static Boolean canNestItemStack(ItemStack itemStack) { return getItemStackNestingData(itemStack) < MAX_NESTING; }
-    public static Boolean canNestItemStack(ItemStack itemStack, HumanEntity player) {
-        if (canNestItemStack(itemStack)) return true;
-        if (!NESTING_LIMIT_MESSAGE.isEmpty()) player.sendMessage(NESTING_LIMIT_MESSAGE);
-        return false;
+    public static Boolean canNestItemStack(ItemStack itemStack) {
+        return getItemStackNestingData(itemStack) < MAX_NESTING;
     }
 
     public static Boolean hasRequiredEnchantment(ItemStack itemStack) {
@@ -180,6 +200,15 @@ public final class PortableChests extends JavaPlugin {
         if (foundEnchantment == null) return false;
         return itemStack.getEnchantments().get(foundEnchantment) >= REQUIRED_ENCHANTMENT_LEVEL;
     }
+
+    public static Boolean canCreateInWorld(World world) {
+        return CREATE_IN_WORLDS.contains(world.getName());
+    }
+
+    public static boolean canPlaceInWorld(World world) {
+        return PLACE_IN_WORLDS.contains(world.getName());
+    }
+
 
 
     private static String encodeInventory(Inventory inventory) {
