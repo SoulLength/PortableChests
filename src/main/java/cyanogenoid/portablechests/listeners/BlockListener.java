@@ -2,8 +2,8 @@ package cyanogenoid.portablechests.listeners;
 
 import cyanogenoid.portablechests.Permissions;
 import cyanogenoid.portablechests.PortableChests;
+import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Nameable;
 import org.bukkit.block.*;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.event.EventHandler;
@@ -25,13 +25,15 @@ public class BlockListener implements Listener {
 
         Block block = e.getBlock();
         BlockState blockState = block.getState();
-        if (!(PortableChests.isContainer(blockState))) return;
+        Location blockLocation = block.getLocation();
+
+        if (!PortableChests.isContainer(blockState) || PortableChests.shouldIgnoreCustomNamed(blockState)) return;
+        if (!PortableChests.canCreateInWorld(blockLocation.getWorld()) && !e.getPlayer().hasPermission(Permissions.canCreatePortableContainersAnywhere)) return;
 
         Inventory blockInventory;
         if (blockState instanceof Chest) blockInventory = ((Chest) blockState).getBlockInventory();
         else blockInventory = ((Container) blockState).getInventory();
         if (Arrays.stream(blockInventory.getContents()).allMatch(Objects::isNull)) return;
-
 
         ItemStack handledItem = e.getPlayer().getInventory().getItemInMainHand();
         ItemStack blockItemStack = block.getDrops(handledItem).stream()
@@ -46,7 +48,7 @@ public class BlockListener implements Listener {
             e.getBlock().setType(Material.AIR);
             PortableChests.setShulkerBoxNestingData(blockInventory, blockItemStack);
             block.getWorld().dropItemNaturally(block.getLocation(), blockItemStack);
-        } else if (e.getPlayer().hasPermission(Permissions.canCreatePortableChest)) {
+        } else if (e.getPlayer().hasPermission(Permissions.canCreatePortableContainers)) {
             e.setDropItems(false);
             block.getWorld().dropItemNaturally(block.getLocation(), PortableChests.makePortableContainer(blockInventory, blockItemStack));
             blockInventory.clear();
@@ -57,12 +59,18 @@ public class BlockListener implements Listener {
     public void on(BlockPlaceEvent e) {
         Block block = e.getBlock();
         BlockState blockState = block.getState();
+        Location blockLocation = block.getLocation();
+
         if (!(PortableChests.isContainer(blockState)) || blockState instanceof ShulkerBox) return;
         if (!PortableChests.isPortableContainer(e.getItemInHand())) return;
 
-        Nameable nameableBlock = (Nameable) blockState;
-        nameableBlock.setCustomName(null);
-        blockState.update();
+        if (!PortableChests.canPlaceInWorld(blockLocation.getWorld()) && !e.getPlayer().hasPermission(Permissions.canPlacePortableContainersAnywhere)) {
+            e.setCancelled(true);
+            if (!PortableChests.CANNOT_PLACE_MESSAGE.isEmpty()) e.getPlayer().sendMessage(PortableChests.CANNOT_PLACE_MESSAGE);
+            return;
+        }
+
+        PortableChests.removeBlockDisplayNameMark(blockState);
 
         Inventory blockInventory = ((Container) e.getBlock().getState()).getInventory();
         try {
