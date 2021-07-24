@@ -27,7 +27,10 @@ public class InventoryListener implements Listener {
         if (!PortableChests.isContainer(e.getInventory())) return;
         ItemStack itemStack = this.findMovingItemStack(e);
         if (itemStack == null || !PortableChests.isPortableContainer(itemStack)) return;
-        if (this.isPlayerMovingItemStackToContainer(e) && !PortableChests.canNestItemStack(itemStack, e.getWhoClicked())) e.setCancelled(true);
+        if (this.isPlayerMovingItemStackToContainer(e) && !PortableChests.canNestItemStack(itemStack)) {
+            e.setCancelled(true);
+            if (!PortableChests.NESTING_LIMIT_MESSAGE.isEmpty()) e.getWhoClicked().sendMessage(PortableChests.NESTING_LIMIT_MESSAGE);
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -35,7 +38,10 @@ public class InventoryListener implements Listener {
         if (e.getInventory().getType().equals(InventoryType.SHULKER_BOX)) return;
         if (!PortableChests.isContainer(e.getInventory())) return;
         if (!PortableChests.isPortableContainer(e.getOldCursor())) return;
-        if (e.getRawSlots().stream().anyMatch(slotID -> slotID <= e.getInventory().getSize() && !PortableChests.canNestItemStack(e.getOldCursor(), e.getWhoClicked()))) e.setCancelled(true);
+        if (e.getRawSlots().stream().anyMatch(slotID -> slotID <= e.getInventory().getSize() && !PortableChests.canNestItemStack(e.getOldCursor()))) {
+            e.setCancelled(true);
+            if (!PortableChests.NESTING_LIMIT_MESSAGE.isEmpty()) e.getWhoClicked().sendMessage(PortableChests.NESTING_LIMIT_MESSAGE);
+        }
     }
 
 
