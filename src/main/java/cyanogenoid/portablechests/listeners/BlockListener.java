@@ -2,7 +2,6 @@ package cyanogenoid.portablechests.listeners;
 
 import cyanogenoid.portablechests.Permissions;
 import cyanogenoid.portablechests.PortableChests;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.*;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -25,10 +24,9 @@ public class BlockListener implements Listener {
 
         Block block = e.getBlock();
         BlockState blockState = block.getState();
-        Location blockLocation = block.getLocation();
 
         if (!PortableChests.isContainer(blockState) || PortableChests.shouldIgnoreCustomNamed(blockState)) return;
-        if (!PortableChests.canCreateInWorld(blockLocation.getWorld()) && !e.getPlayer().hasPermission(Permissions.canCreatePortableContainersAnywhere)) return;
+        if (!PortableChests.canCreateInWorld(block.getWorld()) && !e.getPlayer().hasPermission(Permissions.canCreatePortableContainersAnywhere)) return;
 
         Inventory blockInventory;
         if (blockState instanceof Chest) blockInventory = ((Chest) blockState).getBlockInventory();
@@ -59,12 +57,11 @@ public class BlockListener implements Listener {
     public void on(BlockPlaceEvent e) {
         Block block = e.getBlock();
         BlockState blockState = block.getState();
-        Location blockLocation = block.getLocation();
 
         if (!(PortableChests.isContainer(blockState)) || blockState instanceof ShulkerBox) return;
         if (!PortableChests.isPortableContainer(e.getItemInHand())) return;
 
-        if (!PortableChests.canPlaceInWorld(blockLocation.getWorld()) && !e.getPlayer().hasPermission(Permissions.canPlacePortableContainersAnywhere)) {
+        if (!PortableChests.canPlaceInWorld(block.getWorld()) && !e.getPlayer().hasPermission(Permissions.canPlacePortableContainersAnywhere)) {
             e.setCancelled(true);
             if (!PortableChests.CANNOT_PLACE_MESSAGE.isEmpty()) e.getPlayer().sendMessage(PortableChests.CANNOT_PLACE_MESSAGE);
             return;
