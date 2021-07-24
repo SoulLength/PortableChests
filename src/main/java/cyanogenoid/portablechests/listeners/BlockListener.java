@@ -19,7 +19,7 @@ import java.util.Objects;
 
 public class BlockListener implements Listener {
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void on(BlockBreakEvent e) {
         if (!e.isDropItems()) return;
 
@@ -59,16 +59,14 @@ public class BlockListener implements Listener {
         BlockState blockState = block.getState();
         if (!(PortableChests.isContainer(blockState)) || blockState instanceof ShulkerBox) return;
         if (!PortableChests.isPortableContainer(e.getItemInHand())) return;
-        Inventory blockInventory = ((Container) blockState).getInventory();
-
 
         Nameable nameableBlock = (Nameable) blockState;
         nameableBlock.setCustomName(null);
         blockState.update();
 
+        Inventory blockInventory = ((Container) e.getBlock().getState()).getInventory();
         try {
             PortableChests.fillPortableContainer(blockInventory, e.getItemInHand());
-
         } catch (InvalidConfigurationException invalidConfigurationException) {
             e.getPlayer().sendMessage("Invalid chest content!");
             e.setCancelled(true);
