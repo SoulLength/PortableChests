@@ -24,7 +24,6 @@ import java.util.stream.IntStream;
 
 public final class PortableChests extends JavaPlugin {
     private static NamespacedKey UNIQUE_KEY;
-    private static NamespacedKey CONTENT_KEY;
     private static NamespacedKey NESTING_KEY;
 
     private static final Map<String, Boolean> containersConfigMap = new HashMap<>();
@@ -63,7 +62,6 @@ public final class PortableChests extends JavaPlugin {
         CANNOT_PLACE_MESSAGE = getConfig().getString("cannot-place-message");
 
         UNIQUE_KEY = new NamespacedKey(this, "UNIQUE");
-        CONTENT_KEY = new NamespacedKey(this, "CONTENT");
         NESTING_KEY = new NamespacedKey(this, "NESTING");
 
         containersConfigMap.put("Barrel", getConfig().getBoolean("portable-barrels"));
@@ -115,6 +113,7 @@ public final class PortableChests extends JavaPlugin {
         ItemMeta meta = itemStack.getItemMeta();
         if (meta == null) return itemStack;
 
+
         long count = Arrays.stream(inventory.getContents()).filter(Objects::nonNull).count();
         List<String> lore = Arrays.stream(inventory.getContents())
                                   .filter(Objects::nonNull)
@@ -124,10 +123,13 @@ public final class PortableChests extends JavaPlugin {
         if (count > lore.size()) lore.add(ChatColor.GRAY + ChatColor.ITALIC.toString() + "and " + (count - lore.size()) + " more...");
         meta.setLore(lore);
 
-        if (!ALLOW_STACKING) meta.getPersistentDataContainer().set(UNIQUE_KEY, PersistentDataType.STRING, UUID.randomUUID().toString());
-        meta.getPersistentDataContainer().set(CONTENT_KEY, PersistentDataType.STRING, encodeInventory(inventory));
-        meta.setDisplayName(getItemStackDisplayName(itemStack, true) + ChatColor.ITALIC + "" + ChatColor.GOLD + " (" + count + (count == 1 ? " Stack)" : " Stacks)"));
+        String encodedInventory = encodeInventory(inventory);
+        UUID uuid = ALLOW_STACKING ? UUID.nameUUIDFromBytes(encodedInventory.getBytes()) : UUID.randomUUID();
+        meta.getPersistentDataContainer().set(UNIQUE_KEY, PersistentDataType.STRING, uuid.toString());
+        Database.saveContent(uuid , encodedInventory);
+        //meta.getPersistentDataContainer().set(CONTENT_KEY, PersistentDataType.STRING, encodeInventory(inventory));
 
+        meta.setDisplayName(getItemStackDisplayName(itemStack, true) + ChatColor.ITALIC + "" + ChatColor.GOLD + " (" + count + (count == 1 ? " Stack)" : " Stacks)"));
         setItemMetaNestingData(meta, inventory);
         itemStack.setItemMeta(meta);
         return itemStack;
@@ -164,7 +166,7 @@ public final class PortableChests extends JavaPlugin {
 
     public static void fillPortableContainer(Inventory blockInventory, ItemStack blockItemStack) throws InvalidConfigurationException {
         String encodedInventory = getItemStackContentData(blockItemStack);
-        blockInventory.setContents(decodeInventory(encodedInventory, blockInventory));
+        if (encodedInventory != null) blockInventory.setContents(decodeInventory(encodedInventory, blockInventory));
     }
 
     public static Boolean isContainer(Object object) {
@@ -228,8 +230,8 @@ public final class PortableChests extends JavaPlugin {
     }
 
     private static String getItemStackContentData(ItemStack item) {
-        if (item == null || item.getItemMeta() == null || !item.getItemMeta().getPersistentDataContainer().has(CONTENT_KEY, PersistentDataType.STRING)) return null;
-        return item.getItemMeta().getPersistentDataContainer().get(CONTENT_KEY, PersistentDataType.STRING);
+        if (item == null || item.getItemMeta() == null) return null;
+        return Database.loadContent(item.getItemMeta().getPersistentDataContainer().get(UNIQUE_KEY, PersistentDataType.STRING));
     }
 
     private static Integer getItemStackNestingData(ItemStack item) {
