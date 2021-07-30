@@ -10,7 +10,7 @@ import java.util.logging.Level;
 
 public class Database {
     private static final String dataDir = PortableChests.instance.getDataFolder() + File.separator + "Data";
-    private static final String dataFilePath = configFileDir + File.separator + "inventories.yml";
+    private static final String dataFilePath = dataDir + File.separator + "inventories.yml";
 
     public static void saveContent(UUID uuid, String content) {
         try {
