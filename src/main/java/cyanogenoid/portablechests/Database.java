@@ -9,11 +9,14 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 public class Database {
-    private static final String configFilePath = PortableChests.instance.getDataFolder() + File.separator + "inventories.yml";
+    private static final String dataDir = PortableChests.instance.getDataFolder() + File.separator + "Data";
+    private static final String dataFilePath = configFileDir + File.separator + "inventories.yml";
 
     public static void saveContent(UUID uuid, String content) {
         try {
-            File file = new File(configFilePath);
+            File dir = new File(dataDir);
+            File file = new File(dataFilePath);
+            dir.mkdirs();
             file.createNewFile();
             FileConfiguration config = YamlConfiguration.loadConfiguration(file);
             config.set(uuid.toString(), content);
@@ -24,7 +27,7 @@ public class Database {
     }
 
     public static String loadContent(String uuid) {
-        File file = new File(configFilePath);
+        File file = new File(dataFilePath);
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
         return config.getString(uuid);
     }
