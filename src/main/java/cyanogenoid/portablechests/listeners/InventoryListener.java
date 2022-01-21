@@ -11,23 +11,21 @@ public class InventoryListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void on(InventoryPickupItemEvent e) {
         if (!(PortableChests.isContainer(e.getInventory()) || !PortableChests.isPortableContainer(e.getItem().getItemStack()))) return;
-        if (!PortableChests.canNestItemStack(e.getItem().getItemStack())) e.setCancelled(true);
+        if (!PortableChests.canNestItemStack(e.getInventory(), e.getItem().getItemStack())) e.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void on(InventoryMoveItemEvent e) {
-        if (e.getDestination().getType().equals(InventoryType.SHULKER_BOX)) return;
         if (!(PortableChests.isContainer(e.getDestination()) || !PortableChests.isPortableContainer(e.getItem()))) return;
-        if (!PortableChests.canNestItemStack(e.getItem())) e.setCancelled(true);
+        if (!PortableChests.canNestItemStack(e.getDestination(), e.getItem())) e.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void on(InventoryClickEvent e) {
-        if (e.getInventory().getType().equals(InventoryType.SHULKER_BOX)) return;
         if (!PortableChests.isContainer(e.getInventory())) return;
         ItemStack itemStack = this.findMovingItemStack(e);
         if (itemStack == null || !PortableChests.isPortableContainer(itemStack)) return;
-        if (this.isPlayerMovingItemStackToContainer(e) && !PortableChests.canNestItemStack(itemStack)) {
+        if (this.isPlayerMovingItemStackToContainer(e) && !PortableChests.canNestItemStack(e.getInventory(), itemStack)) {
             e.setCancelled(true);
             if (!PortableChests.NESTING_LIMIT_MESSAGE.isEmpty()) e.getWhoClicked().sendMessage(PortableChests.NESTING_LIMIT_MESSAGE);
         }
@@ -35,10 +33,9 @@ public class InventoryListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void on(InventoryDragEvent e) {
-        if (e.getInventory().getType().equals(InventoryType.SHULKER_BOX)) return;
         if (!PortableChests.isContainer(e.getInventory())) return;
         if (!PortableChests.isPortableContainer(e.getOldCursor())) return;
-        if (e.getRawSlots().stream().anyMatch(slotID -> slotID <= e.getInventory().getSize() && !PortableChests.canNestItemStack(e.getOldCursor()))) {
+        if (e.getRawSlots().stream().anyMatch(slotID -> slotID <= e.getInventory().getSize() && !PortableChests.canNestItemStack(e.getInventory(), e.getOldCursor()))) {
             e.setCancelled(true);
             if (!PortableChests.NESTING_LIMIT_MESSAGE.isEmpty()) e.getWhoClicked().sendMessage(PortableChests.NESTING_LIMIT_MESSAGE);
         }

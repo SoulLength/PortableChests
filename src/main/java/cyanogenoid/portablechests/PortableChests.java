@@ -7,6 +7,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -127,7 +128,6 @@ public final class PortableChests extends JavaPlugin {
         UUID uuid = ALLOW_STACKING ? UUID.nameUUIDFromBytes(encodedInventory.getBytes()) : UUID.randomUUID();
         meta.getPersistentDataContainer().set(UNIQUE_KEY, PersistentDataType.STRING, uuid.toString());
         Database.saveContent(uuid , encodedInventory);
-        //meta.getPersistentDataContainer().set(CONTENT_KEY, PersistentDataType.STRING, encodeInventory(inventory));
 
         meta.setDisplayName(getItemStackDisplayName(itemStack, true) + ChatColor.ITALIC + "" + ChatColor.GOLD + " (" + count + (count == 1 ? " Stack)" : " Stacks)"));
         setItemMetaNestingData(meta, inventory);
@@ -177,18 +177,19 @@ public final class PortableChests extends JavaPlugin {
     }
 
     public static Boolean isPortableContainer(ItemStack itemStack) {
-        if (itemStack == null) return false;
-        Integer nestingData = getItemStackNestingData(itemStack);
-        if (itemStack.getType().equals(Material.SHULKER_BOX)) return nestingData > 0;
-        return nestingData != -1;
-    }
-    public static Boolean containsPortableContainer(Inventory inventory) {
-        return Arrays.stream(inventory.getContents())
-                     .anyMatch(PortableChests::isPortableContainer);
+        return getItemStackNestingData(itemStack) > -1;
     }
 
-    public static Boolean canNestItemStack(ItemStack itemStack) {
+    public static Boolean containsPenaltyContainer(Inventory inventory) {
+        return Arrays.stream(inventory.getContents())
+                     .filter(Objects::nonNull)
+                     .anyMatch(itemStack -> getItemStackNestingData(itemStack) > (itemStack.getType().name().contains("SHULKER_BOX") ? 0 : -1));
+    }
+
+    public static Boolean canNestItemStack(Inventory inventory, ItemStack itemStack) {
+        if (inventory.getType().equals(InventoryType.SHULKER_BOX)) return getItemStackNestingData(itemStack) < MAX_NESTING + 1;
         return getItemStackNestingData(itemStack) < MAX_NESTING;
+
     }
 
     public static Boolean hasRequiredEnchantment(ItemStack itemStack) {
@@ -245,6 +246,7 @@ public final class PortableChests extends JavaPlugin {
 
     private static Integer getTotalContainerNesting(Inventory inventory) {
         return Arrays.stream(inventory.getContents())
+                     .filter(Objects::nonNull)
                      .filter(PortableChests::isPortableContainer)
                      .map(PortableChests::getItemStackNestingData)
                      .max(Comparator.naturalOrder()).orElse(-1);
