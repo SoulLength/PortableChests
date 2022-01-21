@@ -22,9 +22,19 @@ public class InventoryListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void on(InventoryClickEvent e) {
+        if (e.isRightClick() && e.getCurrentItem() != null && e.getCursor() != null) {
+            if (e.getCurrentItem().getType().name().equals("BUNDLE") || e.getCursor().getType().name().equals("BUNDLE")) {
+                if (PortableChests.isPortableContainer(e.getCurrentItem()) || PortableChests.isPortableContainer(e.getCursor())) {
+                    e.setCancelled(true);
+                    return;
+                }
+            }
+        }
+
         if (!PortableChests.isContainer(e.getInventory())) return;
         ItemStack itemStack = this.findMovingItemStack(e);
         if (itemStack == null || !PortableChests.isPortableContainer(itemStack)) return;
+
         if (this.isPlayerMovingItemStackToContainer(e) && !PortableChests.canNestItemStack(e.getInventory(), itemStack)) {
             e.setCancelled(true);
             if (!PortableChests.NESTING_LIMIT_MESSAGE.isEmpty()) e.getWhoClicked().sendMessage(PortableChests.NESTING_LIMIT_MESSAGE);
