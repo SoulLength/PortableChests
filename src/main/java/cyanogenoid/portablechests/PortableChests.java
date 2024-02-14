@@ -1,6 +1,5 @@
 package cyanogenoid.portablechests;
 
-import org.apache.commons.lang.WordUtils;
 import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.configuration.ConfigurationSection;
@@ -91,7 +90,7 @@ public final class PortableChests extends JavaPlugin {
                     getLogger().log(Level.INFO, "Penalty: " + key + " " + level);
                 }
             });
-            if (effects.size() != 0) new PenaltyMonitor(effects).runTaskTimer(this, 0, getConfig().getInt("penalty-update"));
+            if (!effects.isEmpty()) new PenaltyMonitor(effects).runTaskTimer(this, 0, getConfig().getInt("penalty-update"));
         } else getLogger().log(Level.INFO, "No penalties.");
 
         ConfigurationSection required_enchantment = getConfig().getConfigurationSection("enchantment-required");
@@ -129,7 +128,7 @@ public final class PortableChests extends JavaPlugin {
         meta.getPersistentDataContainer().set(UNIQUE_KEY, PersistentDataType.STRING, uuid.toString());
         Database.saveContent(uuid , encodedInventory);
 
-        meta.setDisplayName(getItemStackDisplayName(itemStack, true) + ChatColor.ITALIC + "" + ChatColor.GOLD + " (" + count + (count == 1 ? " Stack)" : " Stacks)"));
+        meta.setDisplayName(getItemStackDisplayName(itemStack, true) + ChatColor.ITALIC + ChatColor.GOLD + " (" + count + (count == 1 ? " Stack)" : " Stacks)"));
         setItemMetaNestingData(meta, inventory);
         itemStack.setItemMeta(meta);
         return itemStack;
@@ -137,7 +136,7 @@ public final class PortableChests extends JavaPlugin {
 
     public static String getItemStackDisplayName(ItemStack itemStack, boolean filterMark) {
         ItemMeta meta = itemStack.getItemMeta();
-        if (meta != null && !meta.getDisplayName().equals(""))
+        if (meta != null && !meta.getDisplayName().isEmpty())
             return ChatColor.stripColor(filterMark ? meta.getDisplayName().replaceAll(" \\(\\d{1,2} (Stack|Stacks)\\)", "")
                                                    : meta.getDisplayName());
         return WordUtils.capitalizeFully(itemStack.getType().name().replace("_", " "));
@@ -145,16 +144,16 @@ public final class PortableChests extends JavaPlugin {
 
     public static void removeBlockDisplayNameMark(BlockState blockState) {
         Nameable nameableBlock = (Nameable) blockState;
-        if (nameableBlock.getCustomName() == null) return;
+        if (nameableBlock.customName() == null) return;
 
-        String resultName = ChatColor.stripColor(nameableBlock.getCustomName().replaceAll(" \\(\\d{1,2} (Stack|Stacks)\\)", ""));
+        String resultName = ChatColor.stripColor(nameableBlock.customName().toString().replaceAll(" \\(\\d{1,2} (Stack|Stacks)\\)", ""));
         nameableBlock.setCustomName(WordUtils.capitalizeFully(blockState.getType().name().replace("_", " ")).equals(resultName) ? null : resultName);
 
         blockState.update();
     }
 
     public static Boolean shouldIgnoreCustomNamed(BlockState blockState) {
-        return IGNORE_CUSTOM_NAMED && blockState instanceof Nameable && ((Nameable) blockState).getCustomName() != null;
+        return IGNORE_CUSTOM_NAMED && blockState instanceof Nameable && ((Nameable) blockState).customName() != null;
     }
 
     public static void setShulkerBoxNestingData(Inventory inventory, ItemStack itemStack) {
@@ -198,7 +197,7 @@ public final class PortableChests extends JavaPlugin {
         Enchantment foundEnchantment = itemStack.getEnchantments()
                                                 .keySet()
                                                 .stream()
-                                                .filter(enchantment -> enchantment.getName().equals(REQUIRED_ENCHANTMENT))
+                                                .filter(enchantment -> enchantment.getKey().asString().equals(REQUIRED_ENCHANTMENT))
                                                 .findFirst().orElse(null);
         if (foundEnchantment == null) return false;
         return itemStack.getEnchantments().get(foundEnchantment) >= REQUIRED_ENCHANTMENT_LEVEL;
