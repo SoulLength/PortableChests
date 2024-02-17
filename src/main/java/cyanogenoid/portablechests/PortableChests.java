@@ -1,5 +1,15 @@
 package cyanogenoid.portablechests;
 
+import cyanogenoid.portablechests.listeners.BlockListener;
+import cyanogenoid.portablechests.listeners.InventoryListener;
+import cyanogenoid.portablechests.utils.PotionEffectTypeByName;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.TextReplacementConfig;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.configuration.ConfigurationSection;
@@ -41,16 +51,7 @@ public final class PortableChests extends JavaPlugin {
 
     public static PortableChests instance;
 
-    @Override
-    public void onEnable() {
-        saveDefaultConfig();
-
-        int configVersion = getConfig().getInt("config-version");
-        if (configVersion < 1)  {
-            getLogger().log(Level.SEVERE, "Config file outdated! Some settings might not be loaded correctly.");
-            getLogger().log(Level.SEVERE, "Remove the configuration file and restart the server to load the new version.");
-        }
-
+    private void initSettings() {
         ALLOW_STACKING = getConfig().getBoolean("allow-stacking");
         MAX_NESTING = getConfig().getInt("max-nesting");
         NESTING_LIMIT_MESSAGE  = getConfig().getString("nesting-limit-message");
@@ -60,9 +61,6 @@ public final class PortableChests extends JavaPlugin {
         CREATE_IN_WORLDS = getConfig().getStringList("create-in-worlds");
         PLACE_IN_WORLDS = getConfig().getStringList("place-in-worlds");
         CANNOT_PLACE_MESSAGE = getConfig().getString("cannot-place-message");
-
-        UNIQUE_KEY = new NamespacedKey(this, "UNIQUE");
-        NESTING_KEY = new NamespacedKey(this, "NESTING");
 
         containersConfigMap.put("Barrel", getConfig().getBoolean("portable-barrels"));
         containersConfigMap.put("BlastFurnace", getConfig().getBoolean("portable-blast-furnaces"));
@@ -76,12 +74,14 @@ public final class PortableChests extends JavaPlugin {
 
         containersConfigMap.put("DoubleChest", getConfig().getBoolean("portable-chests"));
         containersConfigMap.put("ShulkerBox", true);
+    }
 
+    private void initPenalties() {
         ConfigurationSection penalties = getConfig().getConfigurationSection("penalties");
         if (penalties != null) {
             Collection<PotionEffect> effects = new ArrayList<>();
             penalties.getKeys(false).forEach((key) -> {
-                PotionEffectType effectType = PotionEffectType.getByName(key);
+                PotionEffectType effectType = PotionEffectTypeByName.get(key);
                 int level = penalties.getInt(key);
 
                 if (effectType == null) getLogger().log(Level.SEVERE, key + " penalty effect not found.");
@@ -92,16 +92,36 @@ public final class PortableChests extends JavaPlugin {
             });
             if (!effects.isEmpty()) new PenaltyMonitor(effects).runTaskTimer(this, 0, getConfig().getInt("penalty-update"));
         } else getLogger().log(Level.INFO, "No penalties.");
+    }
 
+    private void initReqEnchantment() {
         ConfigurationSection required_enchantment = getConfig().getConfigurationSection("enchantment-required");
         if (required_enchantment != null) {
             REQUIRED_ENCHANTMENT = required_enchantment.getKeys(false).iterator().next();
             REQUIRED_ENCHANTMENT_LEVEL = required_enchantment.getInt(REQUIRED_ENCHANTMENT);
             getLogger().log(Level.INFO, "Enchantment required: " + REQUIRED_ENCHANTMENT + " " + REQUIRED_ENCHANTMENT_LEVEL);
         } else getLogger().log(Level.INFO, "No enchantment required.");
+    }
 
-        getServer().getPluginManager().registerEvents(new cyanogenoid.portablechests.listeners.BlockListener(), this);
-        getServer().getPluginManager().registerEvents(new cyanogenoid.portablechests.listeners.InventoryListener(), this);
+    @Override
+    public void onEnable() {
+        saveDefaultConfig();
+
+        int configVersion = getConfig().getInt("config-version");
+        if (configVersion < 1)  {
+            getLogger().log(Level.SEVERE, "Config file outdated! Some settings might not be loaded correctly.");
+            getLogger().log(Level.SEVERE, "Remove the configuration file and restart the server to load the new version.");
+        }
+
+        initSettings();
+        initPenalties();
+        initReqEnchantment();
+
+        getServer().getPluginManager().registerEvents(new BlockListener(), this);
+        getServer().getPluginManager().registerEvents(new InventoryListener(), this);
+
+        UNIQUE_KEY = new NamespacedKey(this, "UNIQUE");
+        NESTING_KEY = new NamespacedKey(this, "NESTING");
 
         instance = this;
     }
@@ -113,42 +133,39 @@ public final class PortableChests extends JavaPlugin {
         ItemMeta meta = itemStack.getItemMeta();
         if (meta == null) return itemStack;
 
-
         long count = Arrays.stream(inventory.getContents()).filter(Objects::nonNull).count();
-        List<String> lore = Arrays.stream(inventory.getContents())
+        List<Component> lore = Arrays.stream(inventory.getContents())
                                   .filter(Objects::nonNull)
                                   .limit(4)
-                                  .map(item -> ChatColor.GRAY + getItemStackDisplayName(item, false) + " x" + item.getAmount())
+                                  .map(item -> (getItemStackDisplayName(item, false).append(Component.text(" x" + item.getAmount())).style(Style.style(NamedTextColor.GRAY))))
                                   .collect(Collectors.toList());
-        if (count > lore.size()) lore.add(ChatColor.GRAY + ChatColor.ITALIC.toString() + "and " + (count - lore.size()) + " more...");
-        meta.setLore(lore);
+        if (count > lore.size()) lore.add(Component.text("and " + (count - lore.size()) + " more...", NamedTextColor.GRAY, TextDecoration.ITALIC));
+        meta.lore(lore);
 
         String encodedInventory = encodeInventory(inventory);
         UUID uuid = ALLOW_STACKING ? UUID.nameUUIDFromBytes(encodedInventory.getBytes()) : UUID.randomUUID();
         meta.getPersistentDataContainer().set(UNIQUE_KEY, PersistentDataType.STRING, uuid.toString());
         Database.saveContent(uuid , encodedInventory);
 
-        meta.setDisplayName(getItemStackDisplayName(itemStack, true) + ChatColor.ITALIC + ChatColor.GOLD + " (" + count + (count == 1 ? " Stack)" : " Stacks)"));
+        meta.displayName(getItemStackDisplayName(itemStack, true)
+                .append(Component.text(" (" + count + (count == 1 ? " Stack)" : " Stacks)"), NamedTextColor.DARK_GRAY, TextDecoration.ITALIC)));
         setItemMetaNestingData(meta, inventory);
         itemStack.setItemMeta(meta);
         return itemStack;
     }
 
-    public static String getItemStackDisplayName(ItemStack itemStack, boolean filterMark) {
-        ItemMeta meta = itemStack.getItemMeta();
-        if (meta != null && !meta.getDisplayName().isEmpty())
-            return ChatColor.stripColor(filterMark ? meta.getDisplayName().replaceAll(" \\(\\d{1,2} (Stack|Stacks)\\)", "")
-                                                   : meta.getDisplayName());
-        return WordUtils.capitalizeFully(itemStack.getType().name().replace("_", " "));
+    public static Component getItemStackDisplayName(ItemStack itemStack, boolean filterMark) {
+        String displayName = PlainTextComponentSerializer.plainText().serialize(itemStack.displayName()).replaceAll("[\\[\\]]", "");
+        return Component.text(filterMark ? displayName.replaceAll(" \\(\\d{1,2} (Stack|Stacks)\\)", "") : displayName).style(Style.style());
     }
 
     public static void removeBlockDisplayNameMark(BlockState blockState) {
-        Nameable nameableBlock = (Nameable) blockState;
-        if (nameableBlock.customName() == null) return;
+        Component customNameComponent = ((Nameable) blockState).customName();
+        if (customNameComponent == null) return;
 
-        String resultName = ChatColor.stripColor(nameableBlock.customName().toString().replaceAll(" \\(\\d{1,2} (Stack|Stacks)\\)", ""));
-        nameableBlock.setCustomName(WordUtils.capitalizeFully(blockState.getType().name().replace("_", " ")).equals(resultName) ? null : resultName);
-
+        String customName = PlainTextComponentSerializer.plainText().serialize(customNameComponent).replaceAll("[\\[\\]]", "");
+        String resultName = customName.replaceAll(" \\(\\d{1,2} (Stack|Stacks)\\)", "");
+        ((Nameable) blockState).customName(Component.text(resultName).style(Style.style()));
         blockState.update();
     }
 
