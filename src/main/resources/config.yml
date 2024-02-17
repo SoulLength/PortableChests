@@ -15,10 +15,10 @@ portable-smokers: true
 allow-stacking: true
 
 #1 for container inside a container, 2 for container inside a container inside a container, so on...
-max-nesting: 1
+max-nesting: 0
 
 #Same thing but for shulker boxes
-shulker-max-nesting: 2
+shulker-max-nesting: 1
 
 #Message sent to the player when the nesting limit is reached
 nesting-limit-message: §cNesting limit reached!

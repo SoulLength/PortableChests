@@ -107,7 +107,7 @@ public final class PortableChests extends JavaPlugin {
                 return;
             }
             REQUIRED_ENCHANTMENT_LEVEL = required_enchantment.getInt(enchantment_name);
-            getLogger().log(Level.INFO, "Enchantment required: " + REQUIRED_ENCHANTMENT.displayName(REQUIRED_ENCHANTMENT_LEVEL));
+            getLogger().log(Level.INFO, "Enchantment required: " + PlainTextComponentSerializer.plainText().serialize(REQUIRED_ENCHANTMENT.displayName(REQUIRED_ENCHANTMENT_LEVEL)));
         } else getLogger().log(Level.INFO, "No enchantment required.");
     }
 
