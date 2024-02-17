@@ -2,10 +2,7 @@ package cyanogenoid.portablechests;
 
 import cyanogenoid.portablechests.listeners.BlockListener;
 import cyanogenoid.portablechests.listeners.InventoryListener;
-import cyanogenoid.portablechests.utils.PotionEffectTypeByName;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -40,6 +37,7 @@ public final class PortableChests extends JavaPlugin {
 
     private static boolean ALLOW_STACKING;
     private static int MAX_NESTING;
+    private static int SHULKER_MAX_NESTING;
     private static String REQUIRED_ENCHANTMENT;
     private static Integer REQUIRED_ENCHANTMENT_LEVEL;
     private static Boolean IGNORE_CUSTOM_NAMED;
@@ -54,6 +52,8 @@ public final class PortableChests extends JavaPlugin {
     private void initSettings() {
         ALLOW_STACKING = getConfig().getBoolean("allow-stacking");
         MAX_NESTING = getConfig().getInt("max-nesting");
+        SHULKER_MAX_NESTING = getConfig().getInt("shulker-max-nesting");
+
         NESTING_LIMIT_MESSAGE  = getConfig().getString("nesting-limit-message");
 
         IGNORE_CUSTOM_NAMED = getConfig().getBoolean("ignore-custom-named");
@@ -81,14 +81,16 @@ public final class PortableChests extends JavaPlugin {
         if (penalties != null) {
             Collection<PotionEffect> effects = new ArrayList<>();
             penalties.getKeys(false).forEach((key) -> {
-                PotionEffectType effectType = PotionEffectTypeByName.get(key);
-                int level = penalties.getInt(key);
-
-                if (effectType == null) getLogger().log(Level.SEVERE, key + " penalty effect not found.");
-                else {
-                    effects.add(new PotionEffect(effectType, getConfig().getInt("penalty-duration"), level));
-                    getLogger().log(Level.INFO, "Penalty: " + key + " " + level);
+                PotionEffectType effectType;
+                try {
+                    effectType = (PotionEffectType) PotionEffectType.class.getField(key).get(null);
+                } catch (Exception e) {
+                    getLogger().log(Level.SEVERE, key + " penalty effect not found.");
+                    return;
                 }
+                int level = penalties.getInt(key);
+                effects.add(new PotionEffect(effectType, getConfig().getInt("penalty-duration"), level));
+                getLogger().log(Level.INFO, "Penalty: " + key + " " + level);
             });
             if (!effects.isEmpty()) new PenaltyMonitor(effects).runTaskTimer(this, 0, getConfig().getInt("penalty-update"));
         } else getLogger().log(Level.INFO, "No penalties.");
@@ -107,8 +109,8 @@ public final class PortableChests extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
 
-        int configVersion = getConfig().getInt("config-version");
-        if (configVersion < 1)  {
+        double configVersion = getConfig().getDouble("config-version");
+        if (configVersion < 1.2)  {
             getLogger().log(Level.SEVERE, "Config file outdated! Some settings might not be loaded correctly.");
             getLogger().log(Level.SEVERE, "Remove the configuration file and restart the server to load the new version.");
         }
@@ -203,7 +205,7 @@ public final class PortableChests extends JavaPlugin {
     }
 
     public static Boolean canNestItemStack(Inventory inventory, ItemStack itemStack) {
-        if (inventory.getType().equals(InventoryType.SHULKER_BOX)) return getItemStackNestingData(itemStack) < MAX_NESTING + 1;
+        if (inventory.getType().equals(InventoryType.SHULKER_BOX)) return getItemStackNestingData(itemStack) < SHULKER_MAX_NESTING;
         return getItemStackNestingData(itemStack) < MAX_NESTING;
 
     }

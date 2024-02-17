@@ -35,7 +35,8 @@ public class BlockListener implements Listener {
 
         ItemStack handledItem = e.getPlayer().getInventory().getItemInMainHand();
         ItemStack blockItemStack = block.getDrops(handledItem).stream()
-                                        .filter(itemStack -> itemStack != null && itemStack.getType().equals(block.getType()))
+                                        .filter(Objects::nonNull)
+                                        .filter(itemStack -> itemStack.getType().equals(block.getType()))
                                         .findFirst()
                                         .orElse(null);
         if (blockItemStack == null) return;
