@@ -38,7 +38,7 @@ public final class PortableChests extends JavaPlugin {
     private static boolean ALLOW_STACKING;
     private static int MAX_NESTING;
     private static int SHULKER_MAX_NESTING;
-    private static String REQUIRED_ENCHANTMENT;
+    private static Enchantment REQUIRED_ENCHANTMENT;
     private static Integer REQUIRED_ENCHANTMENT_LEVEL;
     private static Boolean IGNORE_CUSTOM_NAMED;
     private static List<String> CREATE_IN_WORLDS;
@@ -99,9 +99,15 @@ public final class PortableChests extends JavaPlugin {
     private void initReqEnchantment() {
         ConfigurationSection required_enchantment = getConfig().getConfigurationSection("enchantment-required");
         if (required_enchantment != null) {
-            REQUIRED_ENCHANTMENT = required_enchantment.getKeys(false).iterator().next();
-            REQUIRED_ENCHANTMENT_LEVEL = required_enchantment.getInt(REQUIRED_ENCHANTMENT);
-            getLogger().log(Level.INFO, "Enchantment required: " + REQUIRED_ENCHANTMENT + " " + REQUIRED_ENCHANTMENT_LEVEL);
+            String enchantment_name = required_enchantment.getKeys(false).iterator().next();
+            try {
+                REQUIRED_ENCHANTMENT = (Enchantment) Enchantment.class.getField(enchantment_name).get(null) ;
+            } catch (Exception e) {
+                getLogger().log(Level.SEVERE, enchantment_name + " enchantment not found.");
+                return;
+            }
+            REQUIRED_ENCHANTMENT_LEVEL = required_enchantment.getInt(enchantment_name);
+            getLogger().log(Level.INFO, "Enchantment required: " + REQUIRED_ENCHANTMENT.displayName(REQUIRED_ENCHANTMENT_LEVEL));
         } else getLogger().log(Level.INFO, "No enchantment required.");
     }
 
@@ -207,19 +213,12 @@ public final class PortableChests extends JavaPlugin {
     public static Boolean canNestItemStack(Inventory inventory, ItemStack itemStack) {
         if (inventory.getType().equals(InventoryType.SHULKER_BOX)) return getItemStackNestingData(itemStack) < SHULKER_MAX_NESTING;
         return getItemStackNestingData(itemStack) < MAX_NESTING;
-
     }
 
     public static Boolean hasRequiredEnchantment(ItemStack itemStack) {
         if (REQUIRED_ENCHANTMENT == null) return true;
-        if (itemStack == null) return false;
-        Enchantment foundEnchantment = itemStack.getEnchantments()
-                                                .keySet()
-                                                .stream()
-                                                .filter(enchantment -> enchantment.getKey().asString().equals(REQUIRED_ENCHANTMENT))
-                                                .findFirst().orElse(null);
-        if (foundEnchantment == null) return false;
-        return itemStack.getEnchantments().get(foundEnchantment) >= REQUIRED_ENCHANTMENT_LEVEL;
+        if (itemStack != null) return itemStack.getEnchantmentLevel(REQUIRED_ENCHANTMENT) >= REQUIRED_ENCHANTMENT_LEVEL;
+        return false;
     }
 
     public static Boolean canCreateInWorld(World world) {
