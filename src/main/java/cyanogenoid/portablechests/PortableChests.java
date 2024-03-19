@@ -13,6 +13,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Item;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -134,18 +135,19 @@ public final class PortableChests extends JavaPlugin {
         instance = this;
     }
 
-    @Override
-    public void onDisable() { }
-
     public static ItemStack makePortableContainer(Inventory inventory, ItemStack itemStack) {
         ItemMeta meta = itemStack.getItemMeta();
         if (meta == null) return itemStack;
 
         long count = Arrays.stream(inventory.getContents()).filter(Objects::nonNull).count();
+
+        meta.displayName(getItemStackDisplayName(itemStack)
+                .append(Component.text(" (" + count + (count == 1 ? " Stack)" : " Stacks)"), NamedTextColor.DARK_GRAY)));
+
         List<Component> lore = Arrays.stream(inventory.getContents())
                                   .filter(Objects::nonNull)
                                   .limit(4)
-                                  .map(item -> (getItemStackDisplayName(item, false).append(Component.text(" x" + item.getAmount())).style(Style.style(NamedTextColor.GRAY))))
+                                  .map(item -> (getItemStackDisplayName(item).append(Component.text(" x" + item.getAmount())).style(Style.style(NamedTextColor.GRAY))))
                                   .collect(Collectors.toList());
         if (count > lore.size()) lore.add(Component.text("and " + (count - lore.size()) + " more...", NamedTextColor.GRAY, TextDecoration.ITALIC));
         meta.lore(lore);
@@ -155,26 +157,32 @@ public final class PortableChests extends JavaPlugin {
         meta.getPersistentDataContainer().set(UNIQUE_KEY, PersistentDataType.STRING, uuid.toString());
         Database.saveContent(uuid , encodedInventory);
 
-        meta.displayName(getItemStackDisplayName(itemStack, true)
-                .append(Component.text(" (" + count + (count == 1 ? " Stack)" : " Stacks)"), NamedTextColor.DARK_GRAY, TextDecoration.ITALIC)));
         setItemMetaNestingData(meta, inventory);
         itemStack.setItemMeta(meta);
         return itemStack;
     }
 
-    public static Component getItemStackDisplayName(ItemStack itemStack, boolean filterMark) {
-        String displayName = PlainTextComponentSerializer.plainText().serialize(itemStack.displayName()).replaceAll("[\\[\\]]", "");
-        return Component.text(filterMark ? displayName.replaceAll(" \\(\\d{1,2} (Stack|Stacks)\\)", "") : displayName).style(Style.style());
+    public static Component getItemStackDisplayName(ItemStack itemStack) {
+        TextDecoration.State italicState = itemStack.displayName().equals(new ItemStack(itemStack.getType()).displayName()) ? TextDecoration.State.FALSE : TextDecoration.State.TRUE;
+        return Component.text(PlainTextComponentSerializer.plainText().serialize(itemStack.displayName()).replaceAll("[\\[\\]]", ""))
+                .decoration(TextDecoration.ITALIC, italicState);
     }
 
     public static void removeBlockDisplayNameMark(BlockState blockState) {
-        Component customNameComponent = ((Nameable) blockState).customName();
-        if (customNameComponent == null) return;
-
-        String customName = PlainTextComponentSerializer.plainText().serialize(customNameComponent).replaceAll("[\\[\\]]", "");
-        String resultName = customName.replaceAll(" \\(\\d{1,2} (Stack|Stacks)\\)", "");
-        ((Nameable) blockState).customName(Component.text(resultName).style(Style.style()));
-        blockState.update();
+        Nameable nameableBlockState = (Nameable) blockState;
+        Component customNameComponent = nameableBlockState.customName();
+        if (customNameComponent != null) {
+            String cleanCustomName = PlainTextComponentSerializer.plainText().serialize(customNameComponent)
+                    .replaceAll("[\\[\\]]", "")
+                    .replaceAll(" \\(\\d{1,2} (Stack|Stacks)\\)", "");
+            nameableBlockState.customName(null);
+            Component originalNameComponent = new ItemStack(blockState.getType()).displayName();
+            String originalName = PlainTextComponentSerializer.plainText().serialize(originalNameComponent).replaceAll("[\\[\\]]", "");
+            if (!cleanCustomName.equals(originalName)) {
+                nameableBlockState.customName(Component.text(cleanCustomName));
+            }
+            blockState.update();
+        }
     }
 
     public static Boolean shouldIgnoreCustomNamed(BlockState blockState) {
