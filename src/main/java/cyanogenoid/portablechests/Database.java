@@ -1,5 +1,6 @@
 package cyanogenoid.portablechests;
 
+import cyanogenoid.portablechests.utils.Constants;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -9,14 +10,14 @@ import java.util.UUID;
 import java.util.logging.Level;
 
 public class Database {
-    private static final String dataDir = PortableChests.instance.getDataFolder() + File.separator + "Data";
-    private static final String dataFilePath = dataDir + File.separator + "inventories.yml";
+    private static final String dataDir = PortableChests.instance.getDataFolder() + File.separator + Constants.DB_DIR;
+    private static final String dataFilePath = dataDir + File.separator + Constants.DB_FILE;
 
     public static void saveContent(UUID uuid, String content) {
         try {
             File dir = new File(dataDir);
             File file = new File(dataFilePath);
-            if (dir.mkdirs() && file.createNewFile()) {
+            if (file.exists() || (dir.mkdirs() && file.createNewFile())) {
                 FileConfiguration config = YamlConfiguration.loadConfiguration(file);
                 config.set(uuid.toString(), content);
                 config.save(file);
