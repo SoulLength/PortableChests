@@ -16,11 +16,11 @@ public class Database {
         try {
             File dir = new File(dataDir);
             File file = new File(dataFilePath);
-            dir.mkdirs();
-            file.createNewFile();
-            FileConfiguration config = YamlConfiguration.loadConfiguration(file);
-            config.set(uuid.toString(), content);
-            config.save(file);
+            if (dir.mkdirs() && file.createNewFile()) {
+                FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+                config.set(uuid.toString(), content);
+                config.save(file);
+            }
         } catch (IOException e) {
             PortableChests.instance.getLogger().log(Level.SEVERE, e.getMessage());
         }
