@@ -12,7 +12,7 @@ portable-hoppers: true
 portable-smokers: true
 
 #Can containers stack when they have exactly the same content?
-allow-stacking: true
+allow-stacking: false
 
 #1 for container inside a container, 2 for container inside a container inside a container, so on...
 max-nesting: 0
