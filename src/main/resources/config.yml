@@ -24,12 +24,12 @@ shulker-max-nesting: 1
 nesting-limit-message: §cNesting limit reached!
 
 #Penalties (PotionEffectType) to apply when a player holds a portable container in their inventory
-#Check https://papermc.io/javadocs/paper/1.20/org/bukkit/potion/PotionEffectType.html
+#Check https://jd.papermc.io/paper/1.21.1/org/bukkit/potion/PotionEffectType.html
 #Format: <EFFECT>: <LEVEL>
 penalties:
   #-- Examples --
-  #SLOW: 1
-  #SLOW_DIGGING: 0
+  #SLOWNESS: 1
+  #MINING_FATIGUE: 0
 
 #The higher the number, the longer the penalties will last
 penalty-duration: 50 #ticks
@@ -39,7 +39,7 @@ penalty-duration: 50 #ticks
 penalty-update: 25 #ticks
 
 #The enchantment required on the handling tool to create a portable container (one only enchantment supported)
-#Check https://jd.papermc.io/paper/1.20/org/bukkit/enchantments/Enchantment.html
+#Check https://jd.papermc.io/paper/1.21.1/org/bukkit/enchantments/Enchantment.html
 #Format: <ENCHANTMENT>: <LEVEL>
 enchantment-required:
   #-- Example --
