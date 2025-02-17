@@ -54,14 +54,14 @@ public class InventoryListener implements Listener {
 
     private boolean isPlayerMovingItemStackToContainer(InventoryClickEvent e) {
         return e.getClickedInventory() != null && (e.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY) && e.getClickedInventory().getType().equals(InventoryType.PLAYER)) ||
-                ((e.getAction().equals(InventoryAction.HOTBAR_MOVE_AND_READD) || e.getAction().equals(InventoryAction.HOTBAR_SWAP)) && PortableChests.isContainer(e.getClickedInventory())) ||
+                (e.getAction().equals(InventoryAction.HOTBAR_SWAP) && PortableChests.isContainer(e.getClickedInventory())) ||
                 ((e.getAction().equals(InventoryAction.PLACE_ALL) || e.getAction().equals(InventoryAction.PLACE_ONE) || e.getAction().equals(InventoryAction.SWAP_WITH_CURSOR)) && PortableChests.isContainer(e.getClickedInventory()));
     }
 
     private ItemStack findMovingItemStack(InventoryClickEvent e) {
         if (e.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY) || e.getAction().equals(InventoryAction.PICKUP_SOME_INTO_BUNDLE) || e.getAction().equals(InventoryAction.PICKUP_ALL_INTO_BUNDLE))
             return e.getCurrentItem();
-        if (e.getAction().equals(InventoryAction.HOTBAR_MOVE_AND_READD) || e.getAction().equals(InventoryAction.HOTBAR_SWAP))
+        if (e.getAction().equals(InventoryAction.HOTBAR_SWAP))
             return e.getHotbarButton() > 0 ? e.getWhoClicked().getInventory().getItem(e.getHotbarButton()) : null;
         if (e.getAction().equals(InventoryAction.PLACE_ALL) || e.getAction().equals(InventoryAction.PLACE_ONE) || e.getAction().equals(InventoryAction.SWAP_WITH_CURSOR) || e.getAction().equals(InventoryAction.PLACE_ALL_INTO_BUNDLE) || e.getAction().equals(InventoryAction.PLACE_SOME_INTO_BUNDLE))
             return e.getCursor();
