@@ -1,15 +1,11 @@
 package cyanogenoid.portablechests;
 
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Collection;
-import java.util.Objects;
-import java.util.logging.Level;
 
 import static org.bukkit.Bukkit.getOnlinePlayers;
 
