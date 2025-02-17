@@ -39,7 +39,7 @@ penalty-duration: 50 #ticks
 penalty-update: 25 #ticks
 
 #The enchantment required on the handling tool to create a portable container (one only enchantment supported)
-#Check https://jd.papermc.io/paper/1.21.1/org/bukkit/enchantments/Enchantment.html
+#Check https://jd.papermc.io/paper/1.21.4/org/bukkit/enchantments/Enchantment.html
 #Format: <ENCHANTMENT>: <LEVEL>
 enchantment-required:
   #-- Example --
