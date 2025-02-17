@@ -7,6 +7,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Material;
 import org.bukkit.Nameable;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -15,10 +16,10 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -31,7 +32,6 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 
 public final class PortableChests extends JavaPlugin {
@@ -228,13 +228,15 @@ public final class PortableChests extends JavaPlugin {
         return getItemStackNestingData(itemStack) > -1;
     }
 
-    public static Boolean isCarryingPortableContainers(Player player) {
-        Stream<ItemStack> inventoryStream = Arrays.stream(player.getInventory().getContents());
-        Stream<ItemStack> cursorItemStack = Stream.of(player.getItemOnCursor());
-        return Stream.concat(inventoryStream, cursorItemStack)
+    public static Boolean containsPortableContainers(List<ItemStack> itemsList) {
+        //FIXME: SPEED THIS UP TO IMPROVE PERFORMANCES
+        return itemsList.stream()
                 .filter(Objects::nonNull)
                 .anyMatch(itemStack -> {
-                    /*TODO: ALSO ITERATE CONTENTS IF BUNDLE*/
+                    if (itemStack.getType().equals(Material.BUNDLE)) {
+                        BundleMeta bundleMeta = (BundleMeta) itemStack.getItemMeta();
+                        return containsPortableContainers(bundleMeta.getItems());
+                    }
                     return getItemStackNestingData(itemStack) > (itemStack.getType().name().contains("SHULKER_BOX") ? 0 : -1);
                 });
     }
