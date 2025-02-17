@@ -22,19 +22,15 @@ public class InventoryListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void on(InventoryClickEvent e) {
-        if (e.isRightClick() && e.getCurrentItem() != null) {
-            if (e.getCurrentItem().getType().name().equals("BUNDLE") || e.getCursor().getType().name().equals("BUNDLE")) {
-                if (PortableChests.isPortableContainer(e.getCurrentItem()) || PortableChests.isPortableContainer(e.getCursor())) {
-                    e.setCancelled(true);
-                    return;
-                }
-            }
+        ItemStack itemStack = this.findMovingItemStack(e);
+        if (itemStack == null || !PortableChests.isPortableContainer(itemStack)) return;
+        if (this.isMovingIntoBundle(e.getAction()) && !PortableChests.ALLOW_BUNDLES) {
+            e.getWhoClicked().sendMessage(PortableChests.BUNDLE_CANNOT_PLACE_MESSAGE);
+            e.setCancelled(true);
+            return;
         }
 
         if (!PortableChests.isContainer(e.getInventory())) return;
-        ItemStack itemStack = this.findMovingItemStack(e);
-        if (itemStack == null || !PortableChests.isPortableContainer(itemStack)) return;
-
         if (this.isPlayerMovingItemStackToContainer(e) && !PortableChests.canNestItemStack(e.getInventory(), itemStack)) {
             e.setCancelled(true);
             if (!PortableChests.NESTING_LIMIT_MESSAGE.isEmpty()) e.getWhoClicked().sendMessage(PortableChests.NESTING_LIMIT_MESSAGE);
@@ -59,9 +55,16 @@ public class InventoryListener implements Listener {
     }
 
     private ItemStack findMovingItemStack(InventoryClickEvent e) {
-        if (e.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY)) return e.getCurrentItem();
-        if (e.getAction().equals(InventoryAction.HOTBAR_MOVE_AND_READD) || e.getAction().equals(InventoryAction.HOTBAR_SWAP)) return e.getHotbarButton() > 0 ? e.getWhoClicked().getInventory().getItem(e.getHotbarButton()) : null;
-        if (e.getAction().equals(InventoryAction.PLACE_ALL) || e.getAction().equals(InventoryAction.PLACE_ONE) || e.getAction().equals(InventoryAction.SWAP_WITH_CURSOR)) return e.getCursor();
+        if (e.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY) || e.getAction().equals(InventoryAction.PICKUP_SOME_INTO_BUNDLE) || e.getAction().equals(InventoryAction.PICKUP_ALL_INTO_BUNDLE))
+            return e.getCurrentItem();
+        if (e.getAction().equals(InventoryAction.HOTBAR_MOVE_AND_READD) || e.getAction().equals(InventoryAction.HOTBAR_SWAP))
+            return e.getHotbarButton() > 0 ? e.getWhoClicked().getInventory().getItem(e.getHotbarButton()) : null;
+        if (e.getAction().equals(InventoryAction.PLACE_ALL) || e.getAction().equals(InventoryAction.PLACE_ONE) || e.getAction().equals(InventoryAction.SWAP_WITH_CURSOR) || e.getAction().equals(InventoryAction.PLACE_ALL_INTO_BUNDLE) || e.getAction().equals(InventoryAction.PLACE_SOME_INTO_BUNDLE))
+            return e.getCursor();
         return null;
+    }
+
+    private boolean isMovingIntoBundle(InventoryAction a) {
+        return a.name().contains("INTO_BUNDLE");
     }
 }

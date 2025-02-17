@@ -22,6 +22,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Comparator;
 import java.util.logging.Level;
@@ -45,7 +50,9 @@ public final class PortableChests extends JavaPlugin {
     private static List<String> PLACE_IN_WORLDS;
 
     public static String NESTING_LIMIT_MESSAGE;
-    public static String CANNOT_PLACE_MESSAGE;
+    public static String WORLD_CANNOT_PLACE_MESSAGE;
+    public static boolean ALLOW_BUNDLES;
+    public static String BUNDLE_CANNOT_PLACE_MESSAGE;
 
     public static PortableChests instance;
 
@@ -60,7 +67,9 @@ public final class PortableChests extends JavaPlugin {
 
         CREATE_IN_WORLDS = getConfig().getStringList("create-in-worlds");
         PLACE_IN_WORLDS = getConfig().getStringList("place-in-worlds");
-        CANNOT_PLACE_MESSAGE = getConfig().getString("cannot-place-message");
+        ALLOW_BUNDLES = getConfig().getBoolean("allow-bundles");
+        WORLD_CANNOT_PLACE_MESSAGE = getConfig().getString("world-cannot-place-message");
+        BUNDLE_CANNOT_PLACE_MESSAGE = getConfig().getString("bundle-cannot-place-message");
 
         containersConfigMap.put("Barrel", getConfig().getBoolean("portable-barrels"));
         containersConfigMap.put("BlastFurnace", getConfig().getBoolean("portable-blast-furnaces"));
@@ -115,10 +124,15 @@ public final class PortableChests extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
 
+        InputStreamReader isr = new InputStreamReader(Objects.requireNonNull(getResource("config.yml")),StandardCharsets.UTF_8);
+        double expectedVersion = YamlConfiguration.loadConfiguration(isr).getDouble("config-version");
+
         double configVersion = getConfig().getDouble("config-version");
-        if (configVersion < 1.2)  {
+        if (configVersion < expectedVersion)  {
             getLogger().log(Level.SEVERE, "Config file outdated! Some settings might not be loaded correctly.");
             getLogger().log(Level.SEVERE, "Remove the configuration file and restart the server to load the new version.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
         }
 
         initSettings();
@@ -212,9 +226,12 @@ public final class PortableChests extends JavaPlugin {
     }
 
     public static Boolean containsPenaltyContainer(Inventory inventory) {
-        return Arrays.stream(inventory.getContents())
+        return Arrays.stream(inventory.getContents() /*TODO: ADD CURSOR ITEMSTACK*/)
                      .filter(Objects::nonNull)
-                     .anyMatch(itemStack -> getItemStackNestingData(itemStack) > (itemStack.getType().name().contains("SHULKER_BOX") ? 0 : -1));
+                     .anyMatch(itemStack -> {
+                         /*TODO: ALSO ITERATE CONTENTS IF BUNDLE*/
+                         return getItemStackNestingData(itemStack) > (itemStack.getType().name().contains("SHULKER_BOX") ? 0 : -1);
+                     });
     }
 
     public static Boolean canNestItemStack(Inventory inventory, ItemStack itemStack) {

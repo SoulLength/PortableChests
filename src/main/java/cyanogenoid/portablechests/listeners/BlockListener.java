@@ -64,7 +64,7 @@ public class BlockListener implements Listener {
 
         if (!PortableChests.canPlaceInWorld(block.getWorld()) && !e.getPlayer().hasPermission(Permissions.canPlacePortableContainersAnywhere)) {
             e.setCancelled(true);
-            if (!PortableChests.CANNOT_PLACE_MESSAGE.isEmpty()) e.getPlayer().sendMessage(PortableChests.CANNOT_PLACE_MESSAGE);
+            if (!PortableChests.WORLD_CANNOT_PLACE_MESSAGE.isEmpty()) e.getPlayer().sendMessage(PortableChests.WORLD_CANNOT_PLACE_MESSAGE);
             return;
         }
 

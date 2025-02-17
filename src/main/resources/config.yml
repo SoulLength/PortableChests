@@ -1,4 +1,4 @@
-config-version: 1.2
+config-version: 1.3
 
 #Containers to make portable
 portable-barrels: true
@@ -24,7 +24,7 @@ shulker-max-nesting: 1
 nesting-limit-message: §cNesting limit reached!
 
 #Penalties (PotionEffectType) to apply when a player holds a portable container in their inventory
-#Check https://jd.papermc.io/paper/1.21.1/org/bukkit/potion/PotionEffectType.html
+#Check https://jd.papermc.io/paper/1.21.4/org/bukkit/potion/PotionEffectType.html
 #Format: <EFFECT>: <LEVEL>
 penalties:
   #-- Examples --
@@ -61,4 +61,10 @@ place-in-worlds:
   - end
 
 #Message sent to the player when they cannot place a container in that world
-cannot-place-message: §cYou cannot place a portable container in this world!
+world-cannot-place-message: §cYou cannot place a portable container in this world!
+
+#Can portable containers be stored in bundles?
+allow-bundles: false
+
+#Message sent to the player when they cannot place a container in a bundle
+bundle-cannot-place-message: §cYou cannot place a portable container in a bundle!
