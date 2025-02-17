@@ -1,12 +1,13 @@
 package cyanogenoid.portablechests;
 
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Objects;
 
 import static org.bukkit.Bukkit.getOnlinePlayers;
 
@@ -19,21 +20,27 @@ public class PenaltyMonitor extends BukkitRunnable {
 
     @Override
     public void run() {
-        getOnlinePlayers().stream()
-                .filter(player -> !player.hasPermission(Permissions.canSkipPenalty))
-                .map(HumanEntity::getInventory)
-                .filter(PortableChests::containsPenaltyContainer)
-                .map(PlayerInventory::getHolder)
-                .filter(Objects::nonNull)
-                .forEach(this::applyPenalties);
+        for (Player player : getOnlinePlayers()) {
+            if (!player.hasPermission(Permissions.canSkipPenalty)) {
+                ItemStack[] inventory = player.getInventory().getContents();
+                ItemStack[] playerItems = Arrays.copyOf(inventory, inventory.length + 1);
+                playerItems[playerItems.length - 1] = player.getItemOnCursor();
+                if (PortableChests.containsPortableContainers(Arrays.asList(playerItems))) {
+                    applyPenalties(player);
+                    if (player.getVehicle() != null && player.getVehicle() instanceof LivingEntity) {
+                        applyPenalties((LivingEntity) player.getVehicle());
+                    }
+                }
+            }
+        }
     }
 
-    private void applyPenalties(HumanEntity humanEntity) {
-        penalties.forEach(penalty -> addPenalty(humanEntity, penalty));
+    private void applyPenalties(LivingEntity livingEntity) {
+        penalties.forEach(penalty -> addPenalty(livingEntity, penalty));
 
     }
 
-    private void addPenalty(HumanEntity humanEntity, PotionEffect penalty) {
-        humanEntity.addPotionEffect(penalty);
+    private void addPenalty(LivingEntity livingEntity, PotionEffect penalty) {
+        livingEntity.addPotionEffect(penalty);
     }
 }
