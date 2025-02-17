@@ -26,7 +26,8 @@ public class BlockListener implements Listener {
         BlockState blockState = block.getState();
 
         if (!PortableChests.isContainer(blockState) || PortableChests.shouldIgnoreCustomNamed(blockState)) return;
-        if (!PortableChests.canCreateInWorld(block.getWorld()) && !e.getPlayer().hasPermission(Permissions.canCreatePortableContainersAnywhere)) return;
+        if (!PortableChests.canCreateInWorld(block.getWorld()) && !e.getPlayer().hasPermission(Permissions.canCreatePortableContainersAnywhere))
+            return;
 
         Inventory blockInventory;
         if (blockState instanceof Chest) blockInventory = ((Chest) blockState).getBlockInventory();
@@ -35,12 +36,13 @@ public class BlockListener implements Listener {
 
         ItemStack handledItem = e.getPlayer().getInventory().getItemInMainHand();
         ItemStack blockItemStack = block.getDrops(handledItem).stream()
-                                        .filter(Objects::nonNull)
-                                        .filter(itemStack -> itemStack.getType().equals(block.getType()))
-                                        .findFirst()
-                                        .orElse(null);
+                .filter(Objects::nonNull)
+                .filter(itemStack -> itemStack.getType().equals(block.getType()))
+                .findFirst()
+                .orElse(null);
         if (blockItemStack == null) return;
-        if (!e.getPlayer().hasPermission(Permissions.canSkipEnchantment) && !PortableChests.hasRequiredEnchantment(handledItem)) return;
+        if (!e.getPlayer().hasPermission(Permissions.canSkipEnchantment) && !PortableChests.hasRequiredEnchantment(handledItem))
+            return;
 
         if (blockState instanceof ShulkerBox) {
             e.setCancelled(true);
@@ -64,7 +66,8 @@ public class BlockListener implements Listener {
 
         if (!PortableChests.canPlaceInWorld(block.getWorld()) && !e.getPlayer().hasPermission(Permissions.canPlacePortableContainersAnywhere)) {
             e.setCancelled(true);
-            if (!PortableChests.WORLD_CANNOT_PLACE_MESSAGE.isEmpty()) e.getPlayer().sendMessage(PortableChests.WORLD_CANNOT_PLACE_MESSAGE);
+            if (!PortableChests.WORLD_CANNOT_PLACE_MESSAGE.isEmpty())
+                e.getPlayer().sendMessage(PortableChests.WORLD_CANNOT_PLACE_MESSAGE);
             return;
         }
 

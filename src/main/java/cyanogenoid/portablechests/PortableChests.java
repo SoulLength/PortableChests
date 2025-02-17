@@ -15,6 +15,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -30,6 +31,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 
 public final class PortableChests extends JavaPlugin {
@@ -59,7 +61,7 @@ public final class PortableChests extends JavaPlugin {
         MAX_NESTING = getConfig().getInt("max-nesting");
         SHULKER_MAX_NESTING = getConfig().getInt("shulker-max-nesting");
 
-        NESTING_LIMIT_MESSAGE  = getConfig().getString("nesting-limit-message");
+        NESTING_LIMIT_MESSAGE = getConfig().getString("nesting-limit-message");
 
         IGNORE_CUSTOM_NAMED = getConfig().getBoolean("ignore-custom-named");
 
@@ -99,7 +101,8 @@ public final class PortableChests extends JavaPlugin {
                 effects.add(new PotionEffect(effectType, getConfig().getInt("penalty-duration"), level));
                 getLogger().log(Level.INFO, "Penalty: " + key + " " + level);
             });
-            if (!effects.isEmpty()) new PenaltyMonitor(effects).runTaskTimer(this, 0, getConfig().getInt("penalty-update"));
+            if (!effects.isEmpty())
+                new PenaltyMonitor(effects).runTaskTimer(this, 0, getConfig().getInt("penalty-update"));
         } else getLogger().log(Level.INFO, "No penalties.");
     }
 
@@ -108,7 +111,7 @@ public final class PortableChests extends JavaPlugin {
         if (required_enchantment != null) {
             String enchantment_name = required_enchantment.getKeys(false).iterator().next();
             try {
-                REQUIRED_ENCHANTMENT = (Enchantment) Enchantment.class.getField(enchantment_name).get(null) ;
+                REQUIRED_ENCHANTMENT = (Enchantment) Enchantment.class.getField(enchantment_name).get(null);
             } catch (Exception e) {
                 getLogger().log(Level.SEVERE, enchantment_name + " enchantment not found.");
                 return;
@@ -122,11 +125,11 @@ public final class PortableChests extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
 
-        InputStreamReader isr = new InputStreamReader(Objects.requireNonNull(getResource("config.yml")),StandardCharsets.UTF_8);
+        InputStreamReader isr = new InputStreamReader(Objects.requireNonNull(getResource("config.yml")), StandardCharsets.UTF_8);
         double expectedVersion = YamlConfiguration.loadConfiguration(isr).getDouble("config-version");
 
         double configVersion = getConfig().getDouble("config-version");
-        if (configVersion < expectedVersion)  {
+        if (configVersion < expectedVersion) {
             getLogger().log(Level.SEVERE, "Config file outdated! Some settings might not be loaded correctly.");
             getLogger().log(Level.SEVERE, "Remove the configuration file and restart the server to load the new version.");
             getServer().getPluginManager().disablePlugin(this);
@@ -156,17 +159,18 @@ public final class PortableChests extends JavaPlugin {
                 .append(Component.text(" (" + count + (count == 1 ? " Stack)" : " Stacks)"), NamedTextColor.DARK_GRAY)));
 
         List<Component> lore = Arrays.stream(inventory.getContents())
-                                  .filter(Objects::nonNull)
-                                  .limit(4)
-                                  .map(item -> (getItemStackDisplayName(item).append(Component.text(" x" + item.getAmount())).style(Style.style(NamedTextColor.GRAY))))
-                                  .collect(Collectors.toList());
-        if (count > lore.size()) lore.add(Component.text("and " + (count - lore.size()) + " more...", NamedTextColor.GRAY, TextDecoration.ITALIC));
+                .filter(Objects::nonNull)
+                .limit(4)
+                .map(item -> (getItemStackDisplayName(item).append(Component.text(" x" + item.getAmount())).style(Style.style(NamedTextColor.GRAY))))
+                .collect(Collectors.toList());
+        if (count > lore.size())
+            lore.add(Component.text("and " + (count - lore.size()) + " more...", NamedTextColor.GRAY, TextDecoration.ITALIC));
         meta.lore(lore);
 
         String encodedInventory = encodeInventory(inventory);
         UUID uuid = ALLOW_STACKING ? UUID.nameUUIDFromBytes(encodedInventory.getBytes()) : UUID.randomUUID();
         meta.getPersistentDataContainer().set(UNIQUE_KEY, PersistentDataType.STRING, uuid.toString());
-        Database.saveContent(uuid , encodedInventory);
+        Database.saveContent(uuid, encodedInventory);
 
         setItemMetaNestingData(meta, inventory);
         itemStack.setItemMeta(meta);
@@ -213,8 +217,9 @@ public final class PortableChests extends JavaPlugin {
     }
 
     public static Boolean isContainer(Object object) {
-        return containersConfigMap.getOrDefault(object.getClass().getSimpleName().replace("Craft",""), false);
+        return containersConfigMap.getOrDefault(object.getClass().getSimpleName().replace("Craft", ""), false);
     }
+
     public static Boolean isContainer(Inventory inventory) {
         return inventory.getHolder() != null && isContainer(inventory.getHolder());
     }
@@ -223,17 +228,20 @@ public final class PortableChests extends JavaPlugin {
         return getItemStackNestingData(itemStack) > -1;
     }
 
-    public static Boolean containsPenaltyContainer(Inventory inventory) {
-        return Arrays.stream(inventory.getContents() /*TODO: ADD CURSOR ITEMSTACK*/)
-                     .filter(Objects::nonNull)
-                     .anyMatch(itemStack -> {
-                         /*TODO: ALSO ITERATE CONTENTS IF BUNDLE*/
-                         return getItemStackNestingData(itemStack) > (itemStack.getType().name().contains("SHULKER_BOX") ? 0 : -1);
-                     });
+    public static Boolean isCarryingPortableContainers(Player player) {
+        Stream<ItemStack> inventoryStream = Arrays.stream(player.getInventory().getContents());
+        Stream<ItemStack> cursorItemStack = Stream.of(player.getItemOnCursor());
+        return Stream.concat(inventoryStream, cursorItemStack)
+                .filter(Objects::nonNull)
+                .anyMatch(itemStack -> {
+                    /*TODO: ALSO ITERATE CONTENTS IF BUNDLE*/
+                    return getItemStackNestingData(itemStack) > (itemStack.getType().name().contains("SHULKER_BOX") ? 0 : -1);
+                });
     }
 
     public static Boolean canNestItemStack(Inventory inventory, ItemStack itemStack) {
-        if (inventory.getType().equals(InventoryType.SHULKER_BOX)) return getItemStackNestingData(itemStack) < SHULKER_MAX_NESTING;
+        if (inventory.getType().equals(InventoryType.SHULKER_BOX))
+            return getItemStackNestingData(itemStack) < SHULKER_MAX_NESTING;
         return getItemStackNestingData(itemStack) < MAX_NESTING;
     }
 
@@ -250,7 +258,6 @@ public final class PortableChests extends JavaPlugin {
     public static boolean canPlaceInWorld(World world) {
         return PLACE_IN_WORLDS.contains(world.getName());
     }
-
 
 
     private static String encodeInventory(Inventory inventory) {
@@ -275,7 +282,8 @@ public final class PortableChests extends JavaPlugin {
     }
 
     private static Integer getItemStackNestingData(ItemStack item) {
-        if (item == null || item.getItemMeta() == null || !item.getItemMeta().getPersistentDataContainer().has(NESTING_KEY, PersistentDataType.INTEGER)) return -1;
+        if (item == null || item.getItemMeta() == null || !item.getItemMeta().getPersistentDataContainer().has(NESTING_KEY, PersistentDataType.INTEGER))
+            return -1;
         return item.getItemMeta().getPersistentDataContainer().get(NESTING_KEY, PersistentDataType.INTEGER);
     }
 
@@ -285,9 +293,9 @@ public final class PortableChests extends JavaPlugin {
 
     private static Integer getTotalContainerNesting(Inventory inventory) {
         return Arrays.stream(inventory.getContents())
-                     .filter(Objects::nonNull)
-                     .filter(PortableChests::isPortableContainer)
-                     .map(PortableChests::getItemStackNestingData)
-                     .max(Comparator.naturalOrder()).orElse(-1);
+                .filter(Objects::nonNull)
+                .filter(PortableChests::isPortableContainer)
+                .map(PortableChests::getItemStackNestingData)
+                .max(Comparator.naturalOrder()).orElse(-1);
     }
 }

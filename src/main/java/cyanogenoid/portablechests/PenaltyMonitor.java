@@ -18,8 +18,8 @@ public class PenaltyMonitor extends BukkitRunnable {
 
     @Override
     public void run() {
-        for (Player player:getOnlinePlayers()) {
-            if (!player.hasPermission(Permissions.canSkipPenalty) && PortableChests.containsPenaltyContainer(player.getInventory())) {
+        for (Player player : getOnlinePlayers()) {
+            if (!player.hasPermission(Permissions.canSkipPenalty) && PortableChests.isCarryingPortableContainers(player)) {
                 applyPenalties(player);
                 if (player.getVehicle() != null && player.getVehicle() instanceof LivingEntity) {
                     applyPenalties((LivingEntity) player.getVehicle());
