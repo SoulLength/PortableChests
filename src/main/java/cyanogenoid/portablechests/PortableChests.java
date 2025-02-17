@@ -229,16 +229,31 @@ public final class PortableChests extends JavaPlugin {
     }
 
     public static Boolean containsPortableContainers(List<ItemStack> itemsList) {
-        //FIXME: SPEED THIS UP TO IMPROVE PERFORMANCES
-        return itemsList.stream()
-                .filter(Objects::nonNull)
-                .anyMatch(itemStack -> {
-                    if (itemStack.getType().equals(Material.BUNDLE)) {
-                        BundleMeta bundleMeta = (BundleMeta) itemStack.getItemMeta();
-                        return containsPortableContainers(bundleMeta.getItems());
+        if (itemsList == null || itemsList.isEmpty()) return false;
+        Deque<List<ItemStack>> stack = new ArrayDeque<>();
+        stack.push(itemsList);
+        while (!stack.isEmpty()) {
+            List<ItemStack> currentList = stack.pop();
+            for (ItemStack itemStack : currentList) {
+                if (itemStack == null) continue;
+                Material type = itemStack.getType();
+                if (type == Material.BUNDLE) {
+                    ItemMeta meta = itemStack.getItemMeta();
+                    if (meta instanceof BundleMeta) {
+                        List<ItemStack> bundleItems = ((BundleMeta) meta).getItems();
+                        if (!bundleItems.isEmpty()) {
+                            stack.push(bundleItems);
+                        }
                     }
-                    return getItemStackNestingData(itemStack) > (itemStack.getType().name().contains("SHULKER_BOX") ? 0 : -1);
-                });
+                } else {
+                    int nestingLevel = getItemStackNestingData(itemStack);
+                    if (nestingLevel > (type.name().contains("SHULKER_BOX") ? 0 : -1)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public static Boolean canNestItemStack(Inventory inventory, ItemStack itemStack) {
