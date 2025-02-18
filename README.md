@@ -1,1 +1,1 @@
-A detailed description of the project can be found at [PortableChests | A Vanilla-Like Containers Transporting Plugin [1.14 ~ 1.18]](https://www.spigotmc.org/resources/portablechests-a-vanilla-like-containers-transporting-plugin-1-14-1-18.91260/)
+A detailed description of the project can be found at [PortableChests | A Vanilla-Like Containers Transporting Plugin [v1.21.4] ](https://www.spigotmc.org/resources/portablechests-a-vanilla-like-containers-transporting-plugin-v1-21-4.91260/)
