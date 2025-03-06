@@ -18,16 +18,18 @@ allow-stacking: false
 max-nesting: 0
 
 #Same thing but for shulker boxes
-shulker-max-nesting: 1
+shulker-max-nesting: 0
 
 #Message sent to the player when the nesting limit is reached
 nesting-limit-message: §cNesting limit reached!
 
 #Penalties (PotionEffectType) to apply when a player holds a portable container in their inventory
+#Shulker boxes won't cause this unless they contain a portable container
 #Check https://jd.papermc.io/paper/1.21.4/org/bukkit/potion/PotionEffectType.html
+# !! CHANGE 1.21.4 IN THE LINK ABOVE WITH YOUR SERVER VERSION !!
 #Format: <EFFECT>: <LEVEL>
 penalties:
-  #-- Examples --
+  #-- Example for 1.21.4 --
   #SLOWNESS: 1
   #MINING_FATIGUE: 0
 
@@ -40,9 +42,10 @@ penalty-update: 25 #ticks
 
 #The enchantment required on the handling tool to create a portable container (one only enchantment supported)
 #Check https://jd.papermc.io/paper/1.21.4/org/bukkit/enchantments/Enchantment.html
+# !! CHANGE 1.21.4 IN THE LINK ABOVE WITH YOUR SERVER VERSION !!
 #Format: <ENCHANTMENT>: <LEVEL>
 enchantment-required:
-  #-- Example --
+  #-- Example for 1.21.4 --
   #SILK_TOUCH: 1
 
 #Should the plugin ignore items with custom names? If not they will be portable too
@@ -63,8 +66,11 @@ place-in-worlds:
 #Message sent to the player when they cannot place a container in that world
 world-cannot-place-message: §cYou cannot place a portable container in this world!
 
+#Only for 1.21.4+
 #Can portable containers be stored in bundles?
+#Allows 64 CONTAINERS in every bundle and bundles inside containers, are you sure it's a good idea?
 allow-bundles: false
 
+#Only for 1.21.4+
 #Message sent to the player when they cannot place a container in a bundle
 bundle-cannot-place-message: §cYou cannot place a portable container in a bundle!
