@@ -7,10 +7,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.Material;
-import org.bukkit.Nameable;
-import org.bukkit.NamespacedKey;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -136,6 +133,13 @@ public final class PortableChests extends JavaPlugin {
             return;
         }
 
+        if (Bukkit.getMinecraftVersion().equals("1.21.2") || Bukkit.getMinecraftVersion().equals("1.21.3")) {
+            getLogger().log(Level.WARNING, "!! WARNING !!");
+            getLogger().log(Level.WARNING, "!! BUNDLES CANNOT BE SUPPORTED in this server version !!");
+            getLogger().log(Level.WARNING, "!! DISABLE BUNDLES CRAFTING to avoid duping and various glitches !!");
+            getLogger().log(Level.WARNING, "!! or consider upgrading to 1.21.4 !!");
+        }
+
         initSettings();
         initPenalties();
         initReqEnchantment();
@@ -259,6 +263,9 @@ public final class PortableChests extends JavaPlugin {
     public static Boolean canNestItemStack(Inventory inventory, ItemStack itemStack) {
         if (inventory.getType().equals(InventoryType.SHULKER_BOX))
             return getItemStackNestingData(itemStack) < SHULKER_MAX_NESTING;
+        if (itemStack.getType().name().contains("SHULKER_BOX")) {
+            return getItemStackNestingData(itemStack) - SHULKER_MAX_NESTING < MAX_NESTING;
+        }
         return getItemStackNestingData(itemStack) < MAX_NESTING;
     }
 
