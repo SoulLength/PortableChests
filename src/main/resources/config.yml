@@ -29,9 +29,9 @@ nesting-limit-message: §cNesting limit reached!
 # !! CHANGE 1.21.4 IN THE LINK ABOVE WITH YOUR SERVER VERSION !!
 #Format: <EFFECT>: <LEVEL>
 penalties:
-  #-- Example for 1.21.4 --
-  #SLOWNESS: 1
-  #MINING_FATIGUE: 0
+#-- Example for 1.21.4 --
+#  SLOWNESS: 1
+#  MINING_FATIGUE: 0
 
 #The higher the number, the longer the penalties will last
 penalty-duration: 50 #ticks
@@ -45,8 +45,8 @@ penalty-update: 25 #ticks
 # !! CHANGE 1.21.4 IN THE LINK ABOVE WITH YOUR SERVER VERSION !!
 #Format: <ENCHANTMENT>: <LEVEL>
 enchantment-required:
-  #-- Example for 1.21.4 --
-  #SILK_TOUCH: 1
+#-- Example for 1.21.4 --
+#  SILK_TOUCH: 1
 
 #Should the plugin ignore items with custom names? If not they will be portable too
 ignore-custom-named: false
