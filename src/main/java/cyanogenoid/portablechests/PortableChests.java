@@ -7,6 +7,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.*;
 import org.bukkit.block.BlockState;
 import org.bukkit.configuration.ConfigurationSection;
@@ -143,6 +144,9 @@ public final class PortableChests extends JavaPlugin {
         initSettings();
         initPenalties();
         initReqEnchantment();
+
+        int bStatsID = 25302;
+        new Metrics(this, bStatsID);
 
         getServer().getPluginManager().registerEvents(new BlockListener(), this);
         getServer().getPluginManager().registerEvents(new InventoryListener(), this);
