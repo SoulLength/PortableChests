@@ -1,5 +1,6 @@
 package cyanogenoid.portablechests.listeners;
 
+import com.google.common.base.Strings;
 import cyanogenoid.portablechests.PortableChests;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,8 +27,9 @@ public class InventoryListener implements Listener {
     public void on(InventoryClickEvent e) {
         ItemStack itemStack = this.findMovingItemStack(e);
         if (itemStack == null || !PortableChests.isPortableContainer(itemStack)) return;
-        if (this.isMovingIntoBundle(e.getAction()) && !PortableChests.ALLOW_BUNDLES) {
-            e.getWhoClicked().sendMessage(PortableChests.BUNDLE_CANNOT_PLACE_MESSAGE);
+        if (this.isMovingIntoBundle(e.getAction()) && !PortableChests.configs.ALLOW_BUNDLES) {
+            String message = PortableChests.configs.BUNDLE_CANNOT_PLACE_MESSAGE;
+            if (!Strings.isNullOrEmpty(message)) e.getWhoClicked().sendMessage(message);
             e.setCancelled(true);
             return;
         }
@@ -35,8 +37,8 @@ public class InventoryListener implements Listener {
         if (!PortableChests.isContainer(e.getInventory())) return;
         if (this.isPlayerMovingItemStackToContainer(e) && !PortableChests.canNestItemStack(e.getInventory(), itemStack)) {
             e.setCancelled(true);
-            if (!PortableChests.NESTING_LIMIT_MESSAGE.isEmpty())
-                e.getWhoClicked().sendMessage(PortableChests.NESTING_LIMIT_MESSAGE);
+            if (!Strings.isNullOrEmpty(PortableChests.configs.NESTING_LIMIT_MESSAGE))
+                e.getWhoClicked().sendMessage(PortableChests.configs.NESTING_LIMIT_MESSAGE);
         }
     }
 
@@ -46,8 +48,8 @@ public class InventoryListener implements Listener {
         if (!PortableChests.isPortableContainer(e.getOldCursor())) return;
         if (e.getRawSlots().stream().anyMatch(slotID -> slotID <= e.getInventory().getSize() && !PortableChests.canNestItemStack(e.getInventory(), e.getOldCursor()))) {
             e.setCancelled(true);
-            if (!PortableChests.NESTING_LIMIT_MESSAGE.isEmpty())
-                e.getWhoClicked().sendMessage(PortableChests.NESTING_LIMIT_MESSAGE);
+            if (!Strings.isNullOrEmpty(PortableChests.configs.NESTING_LIMIT_MESSAGE))
+                e.getWhoClicked().sendMessage(PortableChests.configs.NESTING_LIMIT_MESSAGE);
         }
     }
 

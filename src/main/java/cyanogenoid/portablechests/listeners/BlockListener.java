@@ -1,6 +1,7 @@
 package cyanogenoid.portablechests.listeners;
 
-import cyanogenoid.portablechests.Permissions;
+import com.google.common.base.Strings;
+import cyanogenoid.portablechests.utils.Permissions;
 import cyanogenoid.portablechests.PortableChests;
 import org.bukkit.Material;
 import org.bukkit.block.*;
@@ -65,9 +66,9 @@ public class BlockListener implements Listener {
         if (!PortableChests.isPortableContainer(e.getItemInHand())) return;
 
         if (!PortableChests.canPlaceInWorld(block.getWorld()) && !e.getPlayer().hasPermission(Permissions.canPlacePortableContainersAnywhere)) {
+            String message = PortableChests.configs.WORLD_CANNOT_PLACE_MESSAGE;
+            if (!Strings.isNullOrEmpty(message)) e.getPlayer().sendMessage(message);
             e.setCancelled(true);
-            if (!PortableChests.WORLD_CANNOT_PLACE_MESSAGE.isEmpty())
-                e.getPlayer().sendMessage(PortableChests.WORLD_CANNOT_PLACE_MESSAGE);
             return;
         }
 

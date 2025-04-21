@@ -1,4 +1,4 @@
-package cyanogenoid.portablechests;
+package cyanogenoid.portablechests.utils;
 
 public class Permissions {
     public static final String canCreatePortableContainers = "cyanogenoid.portablechests.create";

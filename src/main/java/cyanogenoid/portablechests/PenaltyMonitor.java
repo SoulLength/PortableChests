@@ -1,5 +1,6 @@
 package cyanogenoid.portablechests;
 
+import cyanogenoid.portablechests.utils.Permissions;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -14,7 +15,7 @@ import static org.bukkit.Bukkit.getOnlinePlayers;
 public class PenaltyMonitor extends BukkitRunnable {
     private final Collection<PotionEffect> penalties;
 
-    PenaltyMonitor(Collection<PotionEffect> penalties) {
+    public PenaltyMonitor(Collection<PotionEffect> penalties) {
         this.penalties = penalties;
     }
 

@@ -2,6 +2,7 @@ package cyanogenoid.portablechests;
 
 import cyanogenoid.portablechests.listeners.BlockListener;
 import cyanogenoid.portablechests.listeners.InventoryListener;
+import cyanogenoid.portablechests.utils.Configs;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
@@ -13,7 +14,6 @@ import org.bukkit.block.BlockState;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -36,52 +36,9 @@ public final class PortableChests extends JavaPlugin {
     private static NamespacedKey UNIQUE_KEY;
     private static NamespacedKey NESTING_KEY;
 
-    private static final Map<String, Boolean> containersConfigMap = new HashMap<>();
-
-    private static boolean ALLOW_STACKING;
-    private static int MAX_NESTING;
-    private static int SHULKER_MAX_NESTING;
-    private static Enchantment REQUIRED_ENCHANTMENT;
-    private static Integer REQUIRED_ENCHANTMENT_LEVEL;
-    private static Boolean IGNORE_CUSTOM_NAMED;
-    private static List<String> CREATE_IN_WORLDS;
-    private static List<String> PLACE_IN_WORLDS;
-
-    public static String NESTING_LIMIT_MESSAGE;
-    public static String WORLD_CANNOT_PLACE_MESSAGE;
-    public static boolean ALLOW_BUNDLES;
-    public static String BUNDLE_CANNOT_PLACE_MESSAGE;
-
     public static PortableChests instance;
+    public static Configs configs;
 
-    private void initSettings() {
-        ALLOW_STACKING = getConfig().getBoolean("allow-stacking");
-        MAX_NESTING = getConfig().getInt("max-nesting");
-        SHULKER_MAX_NESTING = getConfig().getInt("shulker-max-nesting");
-
-        NESTING_LIMIT_MESSAGE = getConfig().getString("nesting-limit-message");
-
-        IGNORE_CUSTOM_NAMED = getConfig().getBoolean("ignore-custom-named");
-
-        CREATE_IN_WORLDS = getConfig().getStringList("create-in-worlds");
-        PLACE_IN_WORLDS = getConfig().getStringList("place-in-worlds");
-        ALLOW_BUNDLES = getConfig().getBoolean("allow-bundles");
-        WORLD_CANNOT_PLACE_MESSAGE = getConfig().getString("world-cannot-place-message");
-        BUNDLE_CANNOT_PLACE_MESSAGE = getConfig().getString("bundle-cannot-place-message");
-
-        containersConfigMap.put("Barrel", getConfig().getBoolean("portable-barrels"));
-        containersConfigMap.put("BlastFurnace", getConfig().getBoolean("portable-blast-furnaces"));
-        containersConfigMap.put("BrewingStand", getConfig().getBoolean("portable-brewing-stands"));
-        containersConfigMap.put("Chest", getConfig().getBoolean("portable-chests"));
-        containersConfigMap.put("Dispenser", getConfig().getBoolean("portable-dispensers"));
-        containersConfigMap.put("Dropper", getConfig().getBoolean("portable-droppers"));
-        containersConfigMap.put("FurnaceFurnace", getConfig().getBoolean("portable-furnaces"));
-        containersConfigMap.put("Hopper", getConfig().getBoolean("portable-hoppers"));
-        containersConfigMap.put("Smoker", getConfig().getBoolean("portable-smokers"));
-
-        containersConfigMap.put("DoubleChest", getConfig().getBoolean("portable-chests"));
-        containersConfigMap.put("ShulkerBox", true);
-    }
 
     private void initPenalties() {
         ConfigurationSection penalties = getConfig().getConfigurationSection("penalties");
@@ -100,23 +57,8 @@ public final class PortableChests extends JavaPlugin {
                 getLogger().log(Level.INFO, "Penalty: " + key + " " + level);
             });
             if (!effects.isEmpty())
-                new PenaltyMonitor(effects).runTaskTimer(this, 0, getConfig().getInt("penalty-update"));
+                new PenaltyMonitor(effects).runTaskTimer(PortableChests.instance, 0, getConfig().getInt("penalty-update"));
         } else getLogger().log(Level.INFO, "No penalties.");
-    }
-
-    private void initReqEnchantment() {
-        ConfigurationSection required_enchantment = getConfig().getConfigurationSection("enchantment-required");
-        if (required_enchantment != null) {
-            String enchantment_name = required_enchantment.getKeys(false).iterator().next();
-            try {
-                REQUIRED_ENCHANTMENT = (Enchantment) Enchantment.class.getField(enchantment_name).get(null);
-            } catch (Exception e) {
-                getLogger().log(Level.SEVERE, enchantment_name + " enchantment not found.");
-                return;
-            }
-            REQUIRED_ENCHANTMENT_LEVEL = required_enchantment.getInt(enchantment_name);
-            getLogger().log(Level.INFO, "Enchantment required: " + PlainTextComponentSerializer.plainText().serialize(REQUIRED_ENCHANTMENT.displayName(REQUIRED_ENCHANTMENT_LEVEL)));
-        } else getLogger().log(Level.INFO, "No enchantment required.");
     }
 
     @Override
@@ -141,10 +83,6 @@ public final class PortableChests extends JavaPlugin {
             getLogger().log(Level.WARNING, "!! or consider upgrading to 1.21.4 !!");
         }
 
-        initSettings();
-        initPenalties();
-        initReqEnchantment();
-
         int bStatsID = 25302;
         new Metrics(this, bStatsID);
 
@@ -155,6 +93,8 @@ public final class PortableChests extends JavaPlugin {
         NESTING_KEY = new NamespacedKey(this, "NESTING");
 
         instance = this;
+        configs = new Configs();
+        this.initPenalties();
     }
 
     public static ItemStack makePortableContainer(Inventory inventory, ItemStack itemStack) {
@@ -176,7 +116,7 @@ public final class PortableChests extends JavaPlugin {
         meta.lore(lore);
 
         String encodedInventory = encodeInventory(inventory);
-        UUID uuid = ALLOW_STACKING ? UUID.nameUUIDFromBytes(encodedInventory.getBytes()) : UUID.randomUUID();
+        UUID uuid = configs.ALLOW_STACKING ? UUID.nameUUIDFromBytes(encodedInventory.getBytes()) : UUID.randomUUID();
         meta.getPersistentDataContainer().set(UNIQUE_KEY, PersistentDataType.STRING, uuid.toString());
         Database.saveContent(uuid, encodedInventory);
 
@@ -209,7 +149,7 @@ public final class PortableChests extends JavaPlugin {
     }
 
     public static Boolean shouldIgnoreCustomNamed(BlockState blockState) {
-        return IGNORE_CUSTOM_NAMED && blockState instanceof Nameable && ((Nameable) blockState).customName() != null;
+        return configs.IGNORE_CUSTOM_NAMED && blockState instanceof Nameable && ((Nameable) blockState).customName() != null;
     }
 
     public static void setShulkerBoxNestingData(Inventory inventory, ItemStack itemStack) {
@@ -225,7 +165,7 @@ public final class PortableChests extends JavaPlugin {
     }
 
     public static Boolean isContainer(Object object) {
-        return containersConfigMap.getOrDefault(object.getClass().getSimpleName().replace("Craft", ""), false);
+        return configs.CONTAINERS.getOrDefault(object.getClass().getSimpleName().replace("Craft", ""), false);
     }
 
     public static Boolean isContainer(Inventory inventory) {
@@ -266,25 +206,25 @@ public final class PortableChests extends JavaPlugin {
 
     public static Boolean canNestItemStack(Inventory inventory, ItemStack itemStack) {
         if (inventory.getType().equals(InventoryType.SHULKER_BOX))
-            return getItemStackNestingData(itemStack) < SHULKER_MAX_NESTING;
+            return getItemStackNestingData(itemStack) < configs.SHULKER_MAX_NESTING;
         if (itemStack.getType().name().contains("SHULKER_BOX")) {
-            return getItemStackNestingData(itemStack) - SHULKER_MAX_NESTING < MAX_NESTING;
+            return getItemStackNestingData(itemStack) - configs.SHULKER_MAX_NESTING - 1 < configs.MAX_NESTING;
         }
-        return getItemStackNestingData(itemStack) < MAX_NESTING;
+        return getItemStackNestingData(itemStack) < configs.MAX_NESTING;
     }
 
     public static Boolean hasRequiredEnchantment(ItemStack itemStack) {
-        if (REQUIRED_ENCHANTMENT == null) return true;
-        if (itemStack != null) return itemStack.getEnchantmentLevel(REQUIRED_ENCHANTMENT) >= REQUIRED_ENCHANTMENT_LEVEL;
+        if (configs.REQUIRED_ENCHANTMENT == null) return true;
+        if (itemStack != null) return itemStack.getEnchantmentLevel(configs.REQUIRED_ENCHANTMENT) >= configs.REQUIRED_ENCHANTMENT_LEVEL;
         return false;
     }
 
     public static Boolean canCreateInWorld(World world) {
-        return CREATE_IN_WORLDS.contains(world.getName());
+        return configs.CREATE_IN_WORLDS.contains(world.getName());
     }
 
     public static boolean canPlaceInWorld(World world) {
-        return PLACE_IN_WORLDS.contains(world.getName());
+        return configs.PLACE_IN_WORLDS.contains(world.getName());
     }
 
 
