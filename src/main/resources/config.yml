@@ -1,4 +1,4 @@
-config-version: 1.3
+config-version: 1.4
 
 #Containers to make portable
 portable-barrels: true
@@ -13,6 +13,9 @@ portable-smokers: true
 
 #Can containers stack when they have exactly the same content?
 allow-stacking: false
+
+#Should the container drop its content as it normally would if the player is sneaking?
+sneaky-break-drops: true
 
 #1 for container inside a container, 2 for container inside a container inside a container, so on...
 max-nesting: 0

@@ -51,6 +51,7 @@ public class BlockListener implements Listener {
             PortableChests.setShulkerBoxNestingData(blockInventory, blockItemStack);
             block.getWorld().dropItemNaturally(block.getLocation(), blockItemStack);
         } else if (e.getPlayer().hasPermission(Permissions.canCreatePortableContainers)) {
+            if (e.getPlayer().isSneaking() && PortableChests.configs.SNEAKY_BREAK_DROPS) return;
             e.setDropItems(false);
             block.getWorld().dropItemNaturally(block.getLocation(), PortableChests.makePortableContainer(blockInventory, blockItemStack));
             blockInventory.clear();
