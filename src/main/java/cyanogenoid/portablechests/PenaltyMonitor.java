@@ -1,14 +1,15 @@
 package cyanogenoid.portablechests;
 
 import cyanogenoid.portablechests.utils.Permissions;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import static org.bukkit.Bukkit.getOnlinePlayers;
 
@@ -22,15 +23,25 @@ public class PenaltyMonitor extends BukkitRunnable {
     @Override
     public void run() {
         for (Player player : getOnlinePlayers()) {
-            if (!player.hasPermission(Permissions.canSkipPenalty)) {
-                ItemStack[] inventory = player.getInventory().getContents();
-                ItemStack[] playerItems = Arrays.copyOf(inventory, inventory.length + 1);
-                playerItems[playerItems.length - 1] = player.getItemOnCursor();
-                if (PortableChests.containsPortableContainers(Arrays.asList(playerItems))) {
+            if (player.hasPermission(Permissions.canSkipPenalty)) {
+                continue;
+            }
+            Entity vehicle = player.getVehicle();
+            if (vehicle instanceof ChestedHorse) {
+                ChestedHorse chestedHorse = (ChestedHorse) vehicle;
+                List<ItemStack> horseItems = Arrays.asList(chestedHorse.getInventory().getContents());
+                if (PortableChests.containsPortableContainers(horseItems)) {
                     applyPenalties(player);
-                    if (player.getVehicle() != null && player.getVehicle() instanceof LivingEntity) {
-                        applyPenalties((LivingEntity) player.getVehicle());
-                    }
+                    applyPenalties(chestedHorse);
+                    continue;
+                }
+            }
+            List<ItemStack> playerItems = new ArrayList<>(Arrays.asList(player.getInventory().getContents()));
+            playerItems.add(player.getItemOnCursor());
+            if (PortableChests.containsPortableContainers(playerItems)) {
+                applyPenalties(player);
+                if (vehicle instanceof LivingEntity) {
+                    applyPenalties((LivingEntity) vehicle);
                 }
             }
         }
