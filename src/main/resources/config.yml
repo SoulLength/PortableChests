@@ -33,8 +33,8 @@ nesting-limit-message: §cNesting limit reached!
 #Format: <EFFECT>: <LEVEL>
 penalties:
 #-- Example for 1.21.4 --
-#  SLOWNESS: 1
-#  MINING_FATIGUE: 0
+  SLOWNESS: 1
+  MINING_FATIGUE: 0
 
 #The higher the number, the longer the penalties will last
 penalty-duration: 50 #ticks
